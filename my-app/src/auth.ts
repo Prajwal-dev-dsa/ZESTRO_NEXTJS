@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import UserModel from "./models/user.model";
 import bcrypt from "bcryptjs";
 import ConnectDB from "./lib/db";
+import Google from "next-auth/providers/google";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -30,8 +31,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return user;
       },
     }),
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider == "google") {
+        await ConnectDB();
+        let dbUser = await UserModel.findOne({ email: user?.email });
+        if (!dbUser) {
+          dbUser = await UserModel.create({
+            name: user?.name,
+            email: user?.email,
+            image: user?.image,
+          });
+        }
+        user.id = dbUser?._id.toString();
+        user.role = dbUser.role;
+      }
+      return true;
+    },
     // token ke andar user ka data dalta hai ye function
     jwt({ token, user }) {
       if (user) {

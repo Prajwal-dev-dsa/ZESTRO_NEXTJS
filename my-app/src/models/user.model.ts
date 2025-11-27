@@ -5,7 +5,8 @@ interface IUser {
   name: string;
   email: string;
   mobile?: string;
-  password: string;
+  password?: string;
+  image?: string;
   role: "user" | "admin" | "deliveryBoy";
   createdAt?: string;
   updatedAt?: string;
@@ -27,7 +28,9 @@ const userSchema = new mongoose.Schema<IUser>(
     },
     password: {
       type: String,
-      required: true,
+    },
+    image: {
+      type: String,
     },
     role: {
       type: String,
