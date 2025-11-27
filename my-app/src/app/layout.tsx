@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Provider from "@/components/Provider";
+import Provider from "@/Provider";
 
 export const metadata: Metadata = {
   title: "Zestro - Groceries. Delivered. Done.",
