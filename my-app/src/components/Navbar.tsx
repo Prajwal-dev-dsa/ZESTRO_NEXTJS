@@ -1,5 +1,5 @@
 "use client"
-import { LogOut, Package, Search, ShoppingCart, User, X } from "lucide-react";
+import { LogOut, Package, PlusCircle, Search, ShoppingCart, User, X, ClipboardCheck, Boxes, Menu } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -45,18 +45,39 @@ function Navbar({ user }: { user: IUser }) {
             <Link href={"/"} className="text-white font-extrabold text-2xl sm:text-3xl tracking-wide hover:scale-105 transition-transform">
                 Zestro
             </Link>
-            <form className="hidden md:flex items-center bg-white rounded-full px-4 py-2 w-1/2 max-w-lg shadow-md">
-                <Search className="w-5 h-5 text-gray-500 mr-2" />
-                <input type="text" placeholder="Search Groceries..." className="w-full text-gray-700 placeholder-gray-400 bg-transparent outline-none" />
-            </form>
+            {
+                user?.role == "user" && <form className="hidden md:flex items-center bg-white rounded-full px-4 py-2 w-1/2 max-w-lg shadow-md">
+                    <Search className="w-5 h-5 text-gray-500 mr-2" />
+                    <input type="text" placeholder="Search Groceries..." className="w-full text-gray-700 placeholder-gray-400 bg-transparent outline-none" />
+                </form>
+            }
             <div className="flex items-center gap-4 md:gap-6 relative">
-                <div onClick={() => setSearchBarOpen(!searchBarOpen)} className="md:hidden relative bg-white rounded-full size-11 flex items-center justify-center shadow-md hover:scale-105 transition-transform">
-                    <Search className="text-blue-500 size-5" />
-                </div>
-                <Link href={""} className="relative bg-white rounded-full size-11 flex items-center justify-center shadow-md hover:scale-105 transition-transform">
-                    <ShoppingCart className="text-blue-500 w-5 h-5" />
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs size-5 flex items-center justify-center rounded-full font-semibold shadow">0</span>
-                </Link>
+                {
+                    user?.role == "user" && <>
+                        <div onClick={() => setSearchBarOpen(!searchBarOpen)} className="md:hidden relative bg-white rounded-full size-11 flex items-center justify-center shadow-md hover:scale-105 transition-transform">
+                            <Search className="text-blue-500 size-5" />
+                        </div>
+                        <Link href={""} className="relative bg-white rounded-full size-11 flex items-center justify-center shadow-md hover:scale-105 transition-transform">
+                            <ShoppingCart className="text-blue-500 w-5 h-5" />
+                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs size-5 flex items-center justify-center rounded-full font-semibold shadow">0</span>
+                        </Link>
+                    </>
+                }
+                {
+                    user?.role == "admin" && <>
+                        <div className="hidden md:flex items-center gap-4">
+                            <Link href={"/admin/add-grocery"} className="flex items-center gap-2 bg-white text-blue-700 font-semibold px-4 py-2 rounded-full hover:bg-blue-50 transition-all">
+                                <PlusCircle className="w-5 h-5" /> Add Grocery
+                            </Link>
+                            <Link href={""} className="flex items-center gap-2 bg-white text-blue-700 font-semibold px-4 py-2 rounded-full hover:bg-blue-50 transition-all">
+                                <Boxes className="w-5 h-5" /> View Grocery
+                            </Link>
+                            <Link href={""} className="flex items-center gap-2 bg-white text-blue-700 font-semibold px-4 py-2 rounded-full hover:bg-blue-50 transition-all">
+                                <ClipboardCheck className="w-5 h-5" /> Manage Orders
+                            </Link>
+                        </div>
+                    </>
+                }
                 <div className="relative" ref={profileDropDownRef}>
                     <div onClick={() => setOpen(!open)} className="bg-white cursor-pointer rounded-full size-11 flex items-center justify-center shadow-md hover:scale-105 overflow-hidden transition-transform">
                         {user?.image ? <Image src={user?.image} className="rounded-full object-cover" alt="User Image" fill /> : <User className="w-5 h-5" />}
@@ -72,13 +93,34 @@ function Navbar({ user }: { user: IUser }) {
                                     <div className="text-xs capitalize text-gray-500">{user?.role}</div>
                                 </div>
                             </div>
-                            <Link onClick={() => setOpen(false)} href={""} className="flex items-center gap-2 px-3 py-2 hover:bg-blue-100 rounded-lg text-gray-700 font-medium">
-                                <Package className="size-6 text-blue-600" />
-                                My Orders
-                            </Link>
+                            {
+                                user?.role == "user" && <Link onClick={() => setOpen(false)} href={""} className="flex items-center gap-2 px-3 py-2 hover:bg-blue-100 rounded-lg text-gray-700 font-medium">
+                                    <Package className="size-6 text-blue-600" />
+                                    My Orders
+                                </Link>
+                            }
+                            {
+                                user?.role == "admin" && <Link onClick={() => setOpen(false)} href={"/admin/add-grocery"} className="sm:hidden flex items-center gap-2 px-3 py-2 hover:bg-blue-100 rounded-lg text-gray-700 font-medium">
+                                    <PlusCircle className="size-6 text-blue-600" />
+                                    Add Grocery
+                                </Link>
+                            }
+                            {
+                                user?.role == "admin" && <Link onClick={() => setOpen(false)} href={""} className="sm:hidden flex items-center gap-2 px-3 py-2 hover:bg-blue-100 rounded-lg text-gray-700 font-medium">
+                                    <Boxes className="size-6 text-blue-600" />
+                                    View Groceries
+                                </Link>
+                            }
+                            {
+                                user?.role == "admin" && <Link onClick={() => setOpen(false)} href={""} className="sm:hidden flex items-center gap-2 px-3 py-2 hover:bg-blue-100 rounded-lg text-gray-700 font-medium">
+                                    <ClipboardCheck className="size-6 text-blue-600" />
+                                    Manage Orders
+                                </Link>
+                            }
                             <button onClick={handleLogout} className="flex items-center cursor-pointer gap-2 w-full text-left px-3 py-2 hover:bg-red-100 rounded-lg text-gray-700 font-medium">
                                 <LogOut className="size-6 text-red-600" />
-                                Logout</button>
+                                Logout
+                            </button>
                         </motion.div>}
                     </AnimatePresence>
                     <AnimatePresence>
