@@ -4,9 +4,11 @@ import { Bike, Loader, User, UserCog2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 
 function EditRoleAndMobilePage() {
     const router = useRouter();
+    const { update } = useSession();
     const [role, setRole] = useState([
         {
             id: "admin", name: "Admin", icon: UserCog2
@@ -30,6 +32,10 @@ function EditRoleAndMobilePage() {
                 mobile
             })
             console.log(res.data)
+            update({
+                role: selectedRole,
+                mobile
+            })
             router.refresh();
             router.push("/");
         } catch (error) {

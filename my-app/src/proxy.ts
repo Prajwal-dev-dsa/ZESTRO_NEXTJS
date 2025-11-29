@@ -18,6 +18,19 @@ export async function proxy(request: NextRequest) {
     loginUrl.searchParams.set("callbackUrl", request.url);
     return NextResponse.redirect(loginUrl);
   }
+
+  if (pathname.startsWith("/user") && token.role !== "user") {
+    NextResponse.redirect(new URL("unauthorized", request.url));
+  }
+
+  if (pathname.startsWith("/admin") && token.role !== "admin") {
+    NextResponse.redirect(new URL("unauthorized", request.url));
+  }
+
+  if (pathname.startsWith("/delivery") && token.role !== "deliveryBoy") {
+    NextResponse.redirect(new URL("unauthorized", request.url));
+  }
+
   return NextResponse.next();
 }
 

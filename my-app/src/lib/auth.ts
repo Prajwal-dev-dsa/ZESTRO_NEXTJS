@@ -54,12 +54,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
     // token ke andar user ka data dalta hai ye function
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id as string;
         token.name = user.name as string;
         token.email = user.email as string;
         token.role = user.role as string;
+      }
+      if (trigger === "update") {
+        token.role = session?.user?.role as string;
       }
       return token;
     },
