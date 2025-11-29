@@ -3,6 +3,11 @@ import ConnectDB from "@/lib/db";
 import UserModel from "@/models/user.model";
 import EditRoleAndMobilePage from "@/components/EditRoleAndMobilePage";
 import { redirect } from "next/navigation";
+import Navbar from "@/components/Navbar";
+import AdminDashboard from "@/components/AdminDashboard";
+import DeliveryBoyDashboard from "@/components/DeliveryBoyDashboard";
+import UserDashboard from "@/components/UserDashboard";
+
 
 export default async function Home() {
   await ConnectDB();
@@ -11,14 +16,18 @@ export default async function Home() {
   if (!user) redirect("/login");
   if (!user?.mobile && user?.role === "user") {
     return (
-      <div>
+      <>
         <EditRoleAndMobilePage />
-      </div>
+      </>
     );
   }
+  const plainJsonUser = JSON.parse(JSON.stringify(user))
   return (
-    <div>
-      <h1>Home</h1>
-    </div>
+    <>
+      <Navbar user={plainJsonUser} />
+      {user?.role === "user" && <UserDashboard />}
+      {user?.role === "admin" && <AdminDashboard />}
+      {user?.role === "deliveryBoy" && <DeliveryBoyDashboard />}
+    </>
   );
 }
