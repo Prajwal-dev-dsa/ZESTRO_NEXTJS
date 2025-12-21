@@ -1,8 +1,8 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import UserModel from "../models/user.model";
+import UserModel from "./models/user.model";
 import bcrypt from "bcryptjs";
-import ConnectDB from "./db";
+import ConnectDB from "./lib/db";
 import Google from "next-auth/providers/google";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -83,7 +83,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60 * 1000,
+    maxAge: 1 * 24 * 60 * 60 * 1000,
   },
   secret: process.env.AUTH_SECRET,
 });

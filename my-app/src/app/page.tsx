@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/auth";
 import ConnectDB from "@/lib/db";
 import UserModel from "@/models/user.model";
 import EditRoleAndMobilePage from "@/components/EditRoleAndMobilePage";

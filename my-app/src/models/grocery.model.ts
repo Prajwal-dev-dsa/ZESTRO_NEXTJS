@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 interface IGrocery {
-  _id?: string;
+  _id?: mongoose.Types.ObjectId;
   name: string;
   category: string;
   unit: string;
