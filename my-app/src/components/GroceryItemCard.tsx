@@ -5,8 +5,8 @@ import mongoose from "mongoose";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
 import { addToCart, decreaseItemQuantity, increaseItemQuantity } from "@/redux/cartSlice";
 
 export interface IGrocery {
@@ -21,8 +21,9 @@ export interface IGrocery {
 }
 
 function GroceryItemCard({ item }: { item: IGrocery }) {
+  const { cartData } = useSelector((state: RootState) => state.cart)
   const dispatch = useDispatch<AppDispatch>()
-  const [quantity, setQuantity] = useState(0);
+  const [quantity, setQuantity] = useState(cartData.find((i) => i._id === item._id)?.quantity || 0);
   const [randomTime, setRandomTime] = useState<number>(8);
 
   const price = Number(item.price);

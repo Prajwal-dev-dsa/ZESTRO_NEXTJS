@@ -60,7 +60,7 @@ function Navbar({ user }: { user: IUser }) {
                         <div onClick={() => setSearchBarOpen(!searchBarOpen)} className="md:hidden relative bg-white rounded-full size-11 flex items-center justify-center shadow-md hover:scale-105 transition-transform">
                             <Search className="text-blue-500 size-5" />
                         </div>
-                        <Link href={""} className="relative bg-white rounded-full size-11 flex items-center justify-center shadow-md hover:scale-105 transition-transform">
+                        <Link href={"/user/cart"} className="relative bg-white rounded-full size-11 flex items-center justify-center shadow-md hover:scale-105 transition-transform">
                             <ShoppingCart className="text-blue-500 w-5 h-5" />
                             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs size-5 flex items-center justify-center rounded-full font-semibold shadow">{cartData?.length}</span>
                         </Link>
