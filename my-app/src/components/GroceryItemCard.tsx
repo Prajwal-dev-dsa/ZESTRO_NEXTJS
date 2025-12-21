@@ -5,9 +5,12 @@ import mongoose from "mongoose";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { addToCart, decreaseItemQuantity, increaseItemQuantity } from "@/redux/cartSlice";
 
 export interface IGrocery {
-  _id?: string | mongoose.Types.ObjectId;
+  _id: mongoose.Types.ObjectId;
   name: string;
   category: string;
   unit: string;
@@ -18,6 +21,7 @@ export interface IGrocery {
 }
 
 function GroceryItemCard({ item }: { item: IGrocery }) {
+  const dispatch = useDispatch<AppDispatch>()
   const [quantity, setQuantity] = useState(0);
   const [randomTime, setRandomTime] = useState<number>(8);
 
@@ -30,9 +34,18 @@ function GroceryItemCard({ item }: { item: IGrocery }) {
     setRandomTime(time);
   }, []);
 
-  const handleAdd = () => setQuantity(1);
-  const handleIncrement = () => setQuantity((prev) => prev + 1);
-  const handleDecrement = () => setQuantity((prev) => (prev > 0 ? prev - 1 : 0));
+  const handleAdd = () => {
+    setQuantity(1);
+    dispatch(addToCart({ ...item, quantity: 1 }))
+  }
+  const handleIncrement = () => {
+    setQuantity((prev) => prev + 1);
+    dispatch(increaseItemQuantity(item._id))
+  }
+  const handleDecrement = () => {
+    setQuantity((prev) => (prev > 0 ? prev - 1 : 0));
+    dispatch(decreaseItemQuantity(item._id))
+  }
 
   return (
     <motion.div
@@ -43,7 +56,6 @@ function GroceryItemCard({ item }: { item: IGrocery }) {
       transition={{ duration: 0.3 }}
       className="group relative flex flex-col h-full bg-white rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm overflow-hidden"
     >
-      {/* --- Image Section (Changed to 4:3 Aspect Ratio) --- */}
       <div className="relative w-full aspect-4/3 p-4 bg-white flex items-center justify-center">
 
         {/* Floating Badges */}

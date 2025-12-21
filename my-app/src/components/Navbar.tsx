@@ -1,5 +1,5 @@
 "use client"
-import { LogOut, Package, PlusCircle, Search, ShoppingCart, User, X, ClipboardCheck, Boxes, Menu } from "lucide-react";
+import { LogOut, Package, PlusCircle, Search, ShoppingCart, User, X, ClipboardCheck, Boxes } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,6 +7,8 @@ import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { signOut } from "next-auth/react";
 import { redirect } from "next/navigation";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 interface IUser {
     _id?: string;
@@ -21,6 +23,7 @@ interface IUser {
 }
 
 function Navbar({ user }: { user: IUser }) {
+    const { cartData } = useSelector((state: RootState) => state.cart)
     const [open, setOpen] = useState(false);
     const [searchBarOpen, setSearchBarOpen] = useState(false)
     const profileDropDownRef = useRef<HTMLDivElement>(null)
@@ -59,7 +62,7 @@ function Navbar({ user }: { user: IUser }) {
                         </div>
                         <Link href={""} className="relative bg-white rounded-full size-11 flex items-center justify-center shadow-md hover:scale-105 transition-transform">
                             <ShoppingCart className="text-blue-500 w-5 h-5" />
-                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs size-5 flex items-center justify-center rounded-full font-semibold shadow">0</span>
+                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs size-5 flex items-center justify-center rounded-full font-semibold shadow">{cartData?.length}</span>
                         </Link>
                     </>
                 }
