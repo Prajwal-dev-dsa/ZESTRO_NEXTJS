@@ -15,10 +15,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { AppDispatch } from "@/redux/store";
 import { decreaseItemQuantity, increaseItemQuantity, removeFromCart } from "@/redux/cartSlice";
+import { useRouter } from "next/navigation";
 
 export default function CartPage() {
     const { cartData } = useSelector((state: RootState) => state.cart)
     const dispatch = useDispatch<AppDispatch>()
+    const router = useRouter()
 
     // Calculations
     const subtotal = cartData.reduce((acc, item) => acc + Number(item.price) * item.quantity, 0);
@@ -47,9 +49,14 @@ export default function CartPage() {
                     <div className="bg-blue-100 p-3 rounded-full">
                         <ShoppingCart className="w-8 h-8 text-blue-600" />
                     </div>
-                    <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800">
+
+                    <motion.h1
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-3xl md:text-4xl font-extrabold text-slate-800"
+                    >
                         Your Shopping Cart
-                    </h1>
+                    </motion.h1>
                 </div>
 
                 {cartData.length > 0 ? (
@@ -154,6 +161,7 @@ export default function CartPage() {
                                 </div>
 
                                 <motion.button
+                                    onClick={() => router.push("/user/checkout")}
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl transition-all flex items-center justify-center cursor-pointer gap-2 mb-4"
