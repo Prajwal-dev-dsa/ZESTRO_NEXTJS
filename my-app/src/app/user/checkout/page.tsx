@@ -15,7 +15,8 @@ import {
     CheckCircle2,
     Home,
     LocateFixed,
-    Loader2
+    Loader2,
+    Loader
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useSelector } from "react-redux";
@@ -25,6 +26,7 @@ import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import L, { LatLngExpression } from "leaflet";
 import axios from "axios";
 import { OpenStreetMapProvider } from "leaflet-geosearch";
+import { useRouter } from "next/navigation";
 
 
 const markerIcon = new L.Icon({
@@ -34,19 +36,21 @@ const markerIcon = new L.Icon({
 })
 
 export default function CheckoutPage() {
+    const router = useRouter()
     const { userData } = useSelector((state: RootState) => state.user)
     const { cartData } = useSelector((state: RootState) => state.cart)
     const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'cod'>('cod');
     const [name, setName] = useState(userData?.name)
     const [mobile, setMobile] = useState(userData?.mobile)
-    const [yourAddress, setYourAddress] = useState<String>("")
+    const [fullAddress, setFullAddress] = useState<String>("")
     const [city, setCity] = useState<String>("")
     const [state, setState] = useState<String>("")
-    const [zip, setZip] = useState<String>("")
+    const [pincode, setPincode] = useState<String>("")
     const [searchQuery, setSearchQuery] = useState("")
     const [position, setPosition] = useState<[number, number] | null>(null)
     const [isLoadingLocation, setIsLoadingLocation] = useState(false);
     const [searchLoading, setSearchLoading] = useState(false)
+    const [loading, setLoading] = useState(false)
 
     // Calculations
     const subtotal = cartData.reduce((acc, item) => acc + Number(item.price) * item.quantity, 0);
@@ -88,10 +92,10 @@ export default function CheckoutPage() {
             try {
                 const res = await axios.get(`https://nominatim.openstreetmap.org/reverse?lat=${position[0]}&lon=${position[1]}&format=json`)
                 const { address } = res.data
-                setYourAddress(res.data?.display_name)
+                setFullAddress(res.data?.display_name)
                 setCity(address.city || address.town || address.village || address.county)
                 setState(address.state)
-                setZip(address.postcode)
+                setPincode(address.postcode)
             } catch (error) {
                 console.log(`Error in fetch address ${error}`);
             }
@@ -134,6 +138,53 @@ export default function CheckoutPage() {
                 }
             }}
         />
+    }
+
+    const handleCodOrder = async () => {
+        if (!userData || !position) return null
+        setLoading(true)
+        try {
+            const res = await axios.post(`/api/user/order`, {
+                userId: userData._id,
+                items: cartData.map((item) => ({
+                    grocery: item._id,
+                    name: item.name,
+                    unit: item.unit,
+                    image: item.image,
+                    quantity: item.quantity,
+                    price: item.price
+                })),
+                totalAmount: total,
+                address: {
+                    name,
+                    mobile,
+                    city,
+                    state,
+                    pincode,
+                    fullAddress,
+                    latitude: position[0],
+                    longitude: position[1],
+                }
+            }, {
+                withCredentials: true
+            })
+            console.log(res.data);
+            setName("")
+            setMobile("")
+            setFullAddress("")
+            setCity("")
+            setState("")
+            setPincode("")
+            router.push("/user/checkout/order-placed")
+        } catch (error) {
+            console.log(`Error in creating order ${error}`);
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleOnlineOrder = async () => {
+        return null
     }
 
     return (
@@ -214,14 +265,14 @@ export default function CheckoutPage() {
                                     <Home className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
                                     <textarea
                                         placeholder="Address (Area and Street)"
-                                        value={yourAddress as string}
-                                        onChange={(e) => setYourAddress(e.target.value)}
+                                        value={fullAddress as string}
+                                        onChange={(e) => setFullAddress(e.target.value)}
                                         rows={2}
                                         className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all font-medium text-slate-700 resize-none"
                                     />
                                 </div>
 
-                                {/* City / State / Zip Grid */}
+                                {/* City / State / pincode Grid */}
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     <div className="relative group">
                                         <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
@@ -247,9 +298,9 @@ export default function CheckoutPage() {
                                         <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
                                         <input
                                             type="text"
-                                            placeholder="Zip Code"
-                                            value={zip as string}
-                                            onChange={(e) => setZip(e.target.value)}
+                                            placeholder="Pin Code"
+                                            value={pincode as string}
+                                            onChange={(e) => setPincode(e.target.value)}
                                             className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all font-medium text-slate-700"
                                         />
                                     </div>
@@ -380,14 +431,16 @@ export default function CheckoutPage() {
 
                             {/* Place Order Button */}
                             <motion.button
+                                onClick={() => {
+                                    paymentMethod === "cod" ? handleCodOrder() : handleOnlineOrder()
+                                }}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 className="w-full mt-6 bg-blue-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 hover:bg-blue-700 cursor-pointer hover:shadow-xl transition-all flex items-center justify-center gap-2"
                             >
-                                {paymentMethod === "cod" ? "Place Order" : "Pay & Place Order"}
-                                <CheckCircle2 className="w-5 h-5" />
+                                {paymentMethod === "cod" ? loading ? <Loader className="w-5 h-5 animate-spin" /> : "Place Order" : loading ? <Loader className="w-5 h-5 animate-spin" /> : "Pay & Place Order"}
+                                {!loading && <CheckCircle2 className="w-5 h-5" />}
                             </motion.button>
-
                         </div>
                     </motion.div>
 
