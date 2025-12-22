@@ -157,7 +157,7 @@ export default function OrderSuccessPage() {
                         className="flex flex-col gap-3"
                     >
                         {/* Primary Button */}
-                        <Link href="/orders" className="w-full">
+                        <Link href="/user/my-orders" className="w-full">
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}

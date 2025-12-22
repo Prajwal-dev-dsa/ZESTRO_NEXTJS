@@ -97,7 +97,7 @@ function Navbar({ user }: { user: IUser }) {
                                 </div>
                             </div>
                             {
-                                user?.role == "user" && <Link onClick={() => setOpen(false)} href={""} className="flex items-center gap-2 px-3 py-2 hover:bg-blue-100 rounded-lg text-gray-700 font-medium">
+                                user?.role == "user" && <Link onClick={() => setOpen(false)} href={"/user/my-orders"} className="flex items-center gap-2 px-3 py-2 hover:bg-blue-100 rounded-lg text-gray-700 font-medium">
                                     <Package className="size-6 text-blue-600" />
                                     My Orders
                                 </Link>
