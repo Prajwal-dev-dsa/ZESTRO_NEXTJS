@@ -184,7 +184,45 @@ export default function CheckoutPage() {
     }
 
     const handleOnlineOrder = async () => {
-        return null
+        if (!userData || !position) return null
+        setLoading(true)
+        try {
+            const res = await axios.post(`/api/user/payment`, {
+                userId: userData._id,
+                items: cartData.map((item) => ({
+                    grocery: item._id,
+                    name: item.name,
+                    unit: item.unit,
+                    image: item.image,
+                    quantity: item.quantity,
+                    price: item.price
+                })),
+                totalAmount: total,
+                address: {
+                    name,
+                    mobile,
+                    city,
+                    state,
+                    pincode,
+                    fullAddress,
+                    latitude: position[0],
+                    longitude: position[1],
+                }
+            }, {
+                withCredentials: true
+            })
+            setName("")
+            setMobile("")
+            setFullAddress("")
+            setCity("")
+            setState("")
+            setPincode("")
+            window.location.href = res.data?.url;
+        } catch (error) {
+            console.log(`Error in creating order ${error}`);
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (

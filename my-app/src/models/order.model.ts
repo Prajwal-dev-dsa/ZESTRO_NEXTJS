@@ -26,6 +26,7 @@ interface IOrder {
     longitude: number;
   };
   status: "pending" | "out of delivery" | "delivered";
+  isPaid: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -75,11 +76,16 @@ const OrderSchema = new mongoose.Schema<IOrder>(
       enum: ["pending", "out of delivery", "delivered"],
       default: "pending",
     },
+    isPaid: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-const OrderModel = mongoose.models?.Order || mongoose.model("Order", OrderSchema);
+const OrderModel =
+  mongoose.models?.Order || mongoose.model("Order", OrderSchema);
 export default OrderModel;
