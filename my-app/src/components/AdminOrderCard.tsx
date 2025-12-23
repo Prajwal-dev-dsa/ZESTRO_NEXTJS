@@ -1,0 +1,210 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+import {
+    Package,
+    ChevronDown,
+    ChevronUp,
+    MapPin,
+    CreditCard,
+    Calendar,
+    User,
+    Phone,
+    Truck,
+    Loader2,
+    HandCoins
+} from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { IOrder } from "@/models/order.model";
+
+interface AdminOrderCardProps {
+    order: IOrder;
+    index: number;
+}
+
+export default function AdminOrderCard({ order, index }: AdminOrderCardProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [status, setStatus] = useState("Pending")
+
+    // --- Helpers for Styles ---
+    const getStatusColor = (currentStatus: string) => {
+        switch (currentStatus.toLowerCase()) {
+            case 'Pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+            case 'Out for delivery': return 'bg-purple-100 text-purple-700 border-purple-200';
+            default: return 'bg-gray-100 text-gray-700';
+        }
+    };
+
+    const paymentBadgeColor = order.isPaid
+        ? "bg-green-50 text-green-600 border-green-100"
+        : "bg-red-50 text-red-600 border-red-100";
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-blue-100/30 transition-all duration-300 overflow-hidden mb-6 group relative"
+        >
+            {/* Loading Overlay during update */}
+            {isUpdating && (
+                <div className="absolute inset-0 bg-white/60 z-20 backdrop-blur-sm flex items-center justify-center rounded-3xl">
+                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                </div>
+            )}
+
+            {/* --- Card Header --- */}
+            <div className="p-5 md:p-6 border-b border-gray-50 relative">
+                <div className="flex flex-col md:flex-row justify-between gap-4">
+
+                    {/* Left: Order Info */}
+                    <div>
+                        <div className="flex flex-wrap items-center gap-3 mb-2">
+                            <div className="bg-blue-50 p-2 rounded-lg">
+                                <Package className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <h3 className="text-lg font-extrabold text-slate-800 tracking-tight">
+                                Order <span className="text-blue-600">#{order?._id?.toString()?.slice(0, 8)}</span>
+                            </h3>
+                            {/* Payment Status Badge */}
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${paymentBadgeColor}`}>
+                                {order.isPaid ? "Paid" : "Unpaid"}
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-slate-400 text-xs md:text-sm font-medium pl-1">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {new Date(order.createdAt!).toLocaleString()}
+                        </div>
+                    </div>
+
+                    {/* Right: Admin Status Dropdown */}
+                    <div className="absolute top-5 right-5 md:static md:flex md:flex-col md:items-end">
+                        <div className="relative group/dropdown">
+                            <select
+                                disabled={isUpdating}
+                                onChange={(e) => setStatus(e.target.value)}
+                                className={`appearance-none cursor-pointer pl-4 pr-10 py-2 bg-amber-100 rounded-xl font-bold text-xs  tracking-wider border transition-all outline-none`}
+                            >
+                                <option value="Pending">Pending</option>
+                                <option value="Out for delivery">Out for Delivery</option>
+                            </select>
+
+                            {/* Custom Arrow */}
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <ChevronDown className="w-3.5 h-3.5 opacity-50" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* --- Customer & Delivery Details --- */}
+            <div className="p-5 md:p-6">
+                <div className="grid grid-cols-1 gap-4 mb-4">
+
+                    {/* Customer Name */}
+                    <div className="flex items-center gap-3">
+                        <User className="w-4 h-4 text-slate-400" />
+                        <p className="text-sm font-bold text-slate-700">
+                            {order?.address?.name}
+                        </p>
+                    </div>
+
+                    {/* Customer Phone */}
+                    <div className="flex items-center gap-3">
+                        <Phone className="w-4 h-4 text-slate-400" />
+                        <p className="text-sm font-medium text-slate-600">{order?.address?.mobile}</p>
+                    </div>
+
+                    {/* Address */}
+                    <div className="flex items-start gap-3">
+                        <MapPin className="w-4 h-4 text-slate-400 mt-0.5" />
+                        <p className="text-sm font-medium text-slate-600 leading-snug w-full md:w-2/3">
+                            {order?.address?.fullAddress}
+                        </p>
+                    </div>
+
+                    {/* Payment Method */}
+                    <div className="flex items-center gap-3">
+                        {order.paymentMethod === 'cod' ? <HandCoins className="w-4 h-4 text-slate-400" /> : <CreditCard className="w-4 h-4 text-slate-400" />}
+                        <p className="text-sm font-medium text-slate-600 capitalize">
+                            {order.paymentMethod === 'cod' ? 'Cash On Delivery' : 'Online Payment'}
+                        </p>
+                    </div>
+
+                </div>
+
+                {/* --- Accordion Toggle --- */}
+                <div className="border-t border-gray-100 pt-4">
+                    <div
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="flex items-center justify-between cursor-pointer group hover:bg-slate-50 p-2 -mx-2 rounded-lg transition-colors"
+                    >
+                        <div className="flex items-center gap-2">
+                            <Package className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm font-bold text-slate-700 group-hover:text-blue-700 transition-colors">
+                                {isOpen ? "Hide Items" : `View ${order.items.length} Items`}
+                            </span>
+                        </div>
+                        {isOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                    </div>
+                </div>
+
+                {/* --- Accordion Content (Items) --- */}
+                <AnimatePresence>
+                    {isOpen && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className="overflow-hidden"
+                        >
+                            <div className="pt-2 space-y-3">
+                                {order.items.map((item, idx) => (
+                                    <div key={idx} className="flex items-center gap-4 py-3 border-b border-dashed border-gray-100 last:border-0 bg-slate-50/50 rounded-xl px-3 mt-2">
+                                        <div className="relative w-12 h-12 bg-white rounded-lg border border-gray-200 p-1 shrink-0">
+                                            <Image
+                                                src={item.image}
+                                                alt={item.name}
+                                                fill
+                                                className="object-contain mix-blend-multiply"
+                                            />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-bold text-slate-800 truncate">{item.name}</p>
+                                            <p className="text-xs text-slate-500 font-medium">{item.quantity}x {item.unit}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-sm font-bold text-slate-800">₹{Number(item.price) * item.quantity}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {/* --- Card Footer --- */}
+            <div className="px-5 py-4 bg-slate-50/50 border-t border-slate-100 flex flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-2 text-sm">
+                    <Truck className="w-4 h-4 text-slate-400" />
+                    <span className="text-slate-600 font-medium hidden xs:inline">Delivery:</span>
+                    <span className={`text-xs font-bold uppercase ${status === 'delivered' ? 'text-green-600' : 'text-orange-500'}`}>
+                        {status}
+                    </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <span className="text-slate-500 text-sm font-medium">Total:</span>
+                    <span className="text-lg font-extrabold text-slate-800">₹{order.totalAmount}</span>
+                </div>
+            </div>
+
+        </motion.div>
+    );
+}

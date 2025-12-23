@@ -16,7 +16,7 @@ export interface IOrder {
   totalAmount: number;
   paymentMethod: "cod" | "online";
   address: {
-    fullName: string;
+    name: string;
     mobile: string;
     city: string;
     state: string;
