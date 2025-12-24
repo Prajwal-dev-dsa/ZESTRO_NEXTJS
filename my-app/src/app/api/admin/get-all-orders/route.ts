@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const orders = await OrderModel.find({}).populate("user");
+    const orders = await OrderModel.find({})
+      .populate("user")
+      .sort({ createdAt: -1 });
     if (!orders) {
       return NextResponse.json(
         { message: "Orders not found" },

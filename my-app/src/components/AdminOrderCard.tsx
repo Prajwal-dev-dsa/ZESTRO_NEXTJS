@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { IOrder } from "@/models/order.model";
+import axios from "axios";
 
 interface AdminOrderCardProps {
     order: IOrder;
@@ -26,13 +27,13 @@ interface AdminOrderCardProps {
 export default function AdminOrderCard({ order, index }: AdminOrderCardProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
-    const [status, setStatus] = useState("Pending")
+    const [status, setStatus] = useState<string>(order.status)
 
     // --- Helpers for Styles ---
     const getStatusColor = (currentStatus: string) => {
-        switch (currentStatus.toLowerCase()) {
-            case 'Pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-            case 'Out for delivery': return 'bg-purple-100 text-purple-700 border-purple-200';
+        switch (currentStatus) {
+            case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+            case 'out of delivery': return 'bg-purple-100 text-purple-700 border-purple-200';
             default: return 'bg-gray-100 text-gray-700';
         }
     };
@@ -41,6 +42,15 @@ export default function AdminOrderCard({ order, index }: AdminOrderCardProps) {
         ? "bg-green-50 text-green-600 border-green-100"
         : "bg-red-50 text-red-600 border-red-100";
 
+    const updateOrderStatus = async (orderId: string, status: string) => {
+        setStatus(status)
+        try {
+            const res = await axios.put(`/api/admin/update-order-status/${orderId}`, { status })
+            console.log(res.data);
+        } catch (error) {
+            console.log(error);
+        }
+    }
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -85,11 +95,12 @@ export default function AdminOrderCard({ order, index }: AdminOrderCardProps) {
                         <div className="relative group/dropdown">
                             <select
                                 disabled={isUpdating}
-                                onChange={(e) => setStatus(e.target.value)}
+                                onChange={(e) => updateOrderStatus(order?._id?.toString()!, e.target.value)}
+                                value={status}
                                 className={`appearance-none cursor-pointer pl-4 pr-10 py-2 bg-amber-100 rounded-xl font-bold text-xs  tracking-wider border transition-all outline-none`}
                             >
-                                <option value="Pending">Pending</option>
-                                <option value="Out for delivery">Out for Delivery</option>
+                                <option value="pending">Pending</option>
+                                <option value="out of delivery">Out of Delivery</option>
                             </select>
 
                             {/* Custom Arrow */}
@@ -194,7 +205,7 @@ export default function AdminOrderCard({ order, index }: AdminOrderCardProps) {
                 <div className="flex items-center gap-2 text-sm">
                     <Truck className="w-4 h-4 text-slate-400" />
                     <span className="text-slate-600 font-medium hidden xs:inline">Delivery:</span>
-                    <span className={`text-xs font-bold uppercase ${status === 'delivered' ? 'text-green-600' : 'text-orange-500'}`}>
+                    <span className={`text-xs font-bold uppercase ${getStatusColor(status)}`}>
                         {status}
                     </span>
                 </div>

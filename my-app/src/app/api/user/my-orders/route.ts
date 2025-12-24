@@ -7,9 +7,9 @@ export async function GET() {
   try {
     await ConnectDB();
     const session = await auth();
-    const orders = await OrderModel.find({ user: session?.user?.id }).populate(
-      "user"
-    );
+    const orders = await OrderModel.find({ user: session?.user?.id })
+      .populate("user")
+      .sort({ createdAt: -1 });
     if (!orders) {
       NextResponse.json({ message: "No orders found" }, { status: 400 });
     }

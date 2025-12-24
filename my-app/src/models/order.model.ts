@@ -27,6 +27,8 @@ export interface IOrder {
   };
   status: "pending" | "out of delivery" | "delivered";
   isPaid: boolean;
+  orderAssignment?: mongoose.Types.ObjectId;
+  assignedDeliveryBoy?: mongoose.Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -79,6 +81,14 @@ const OrderSchema = new mongoose.Schema<IOrder>(
     isPaid: {
       type: Boolean,
       default: false,
+    },
+    orderAssignment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Delivery",
+    },
+    assignedDeliveryBoy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   {

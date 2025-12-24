@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import AdminDashboard from "@/components/AdminDashboard";
 import DeliveryBoyDashboard from "@/components/DeliveryBoyDashboard";
 import UserDashboard from "@/components/UserDashboard";
+import GeoLocationUpdater from "@/components/GeoLocationUpdater";
 
 
 export default async function Home() {
@@ -25,9 +26,10 @@ export default async function Home() {
   return (
     <>
       <Navbar user={plainJsonUser} />
-      {user?.role === "user" && <UserDashboard />}
-      {user?.role === "admin" && <AdminDashboard />}
-      {user?.role === "deliveryBoy" && <DeliveryBoyDashboard />}
+      <GeoLocationUpdater userId={plainJsonUser?._id} />
+      {plainJsonUser?.role === "user" && <UserDashboard />}
+      {plainJsonUser?.role === "admin" && <AdminDashboard />}
+      {plainJsonUser?.role === "deliveryBoy" && <DeliveryBoyDashboard />}
     </>
   );
 }
