@@ -3,7 +3,7 @@ import axios from "axios";
 import { Bike, Loader, User, UserCog2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
 function EditRoleAndMobilePage() {
@@ -24,6 +24,21 @@ function EditRoleAndMobilePage() {
     const [selectedRole, setSelectedRole] = useState("")
     const [mobile, setMobile] = useState("")
     const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        const checkIfAdminExists = async () => {
+            try {
+                const res = await axios.get(`/api/check-if-admin-exists`)
+                console.log(res.data);
+                if (res.data.isAdminExists) {
+                    setRole(role.filter(role => role.id !== 'admin'))
+                }
+            } catch (error) {
+                console.log(`Error in checkIfAdminExists`);
+            }
+        }
+        checkIfAdminExists();
+    }, [])
 
     const handleSubmit = async () => {
         try {

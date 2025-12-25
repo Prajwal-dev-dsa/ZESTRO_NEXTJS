@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
     Package,
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { IOrder } from "@/models/order.model";
+import { initSocket } from "@/lib/socket.io";
 
 interface OrderCardProps {
     order: IOrder;
@@ -21,18 +22,18 @@ interface OrderCardProps {
 
 export default function OrderCard({ order, index }: OrderCardProps) {
     const [isOpen, setIsOpen] = useState(false);
-
+    const [status, setStatus] = useState<string>(order.status)
     // Helper: Status Badge Colors 
     const statusColors = (status: string) => {
         switch (status) {
             case "pending":
-                return "bg-yellow-50 text-yellow-700 border-yellow-200";
+                return "bg-yellow-100 text-yellow-700 border-yellow-200";
             case "out of delivery":
-                return "bg-blue-50 text-blue-700 border-blue-200";
+                return "bg-purple-100 text-purple-700 border-purple-200";
             case "delivered":
-                return "bg-green-50 text-green-700 border-green-200";
+                return "bg-green-100 text-green-700 border-green-200";
             default:
-                return "bg-gray-50 text-gray-700 border-gray-200";
+                return "bg-gray-100 text-gray-700 border-gray-200";
         }
     }
 
@@ -40,6 +41,19 @@ export default function OrderCard({ order, index }: OrderCardProps) {
         Paid: "bg-green-50 text-green-600 border-green-100",
         Unpaid: "bg-red-50 text-red-600 border-red-100",
     };
+
+    useEffect(() => {
+        const socket = initSocket();
+        socket.on("update-order-status", (data) => {
+            console.log(data.orderId.toString(), order?._id?.toString())
+            if (data.orderId.toString() === order?._id?.toString()) {
+                setStatus(data.status.toLowerCase())
+            }
+        })
+        return () => {
+            socket.off("update-order-status")
+        }
+    }, [])
 
     return (
         <motion.div
@@ -159,9 +173,9 @@ export default function OrderCard({ order, index }: OrderCardProps) {
             {/* --- Card Footer --- */}
             <div className="p-4 md:p-5 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2 text-sm">
-                    <div className={`w-2 h-2 rounded-full ${order.status === 'delivered' ? 'bg-green-500' : 'bg-orange-400'} animate-pulse`} />
+                    <div className={`w-2 h-2 rounded-full animate-pulse`} />
                     <span className="text-slate-600 font-medium">
-                        Delivery: <span className={order.status === 'delivered' ? 'text-green-600 font-bold' : 'text-orange-500 font-bold'}>{order.status.toUpperCase()}</span>
+                        Delivery: <span className={`text-xs font-bold uppercase ${statusColors(status)}`}>{status.toUpperCase()}</span>
                     </span>
                 </div>
 

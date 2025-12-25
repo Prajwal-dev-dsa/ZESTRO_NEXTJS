@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, ShoppingBag, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
-import OrderCard from "@/components/OrderCard";
+import OrderCard from "@/components/UserOrderCard";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { IOrder } from "@/models/order.model";

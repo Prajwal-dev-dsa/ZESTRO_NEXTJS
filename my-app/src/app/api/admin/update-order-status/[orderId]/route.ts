@@ -1,4 +1,5 @@
 import ConnectDB from "@/lib/db";
+import socketEmitEventHandler from "@/lib/socketEmitEventHandler";
 import deliveryModel from "@/models/delivery.model";
 import OrderModel from "@/models/order.model";
 import UserModel from "@/models/user.model";
@@ -50,6 +51,10 @@ export async function PUT(
       if (availableDeliveryBoys.length == 0) {
         order.save();
         order.orderAssignment = null;
+        await socketEmitEventHandler("update-order-status", {
+          orderId: order._id,
+          status: order.status,
+        });
         return NextResponse.json(
           { message: "No Delivery Boy Found, Try Again Later" },
           { status: 200 }
@@ -68,10 +73,23 @@ export async function PUT(
         latitude: deliveryBoy.location.coordinates[1],
         longitude: deliveryBoy.location.coordinates[0],
       }));
-      await deliveryAssignment.populate("totalDeliveryBoys");
+      await deliveryAssignment.populate("order");
+      for (const deliveryBoy of availableDeliveryBoys) {
+        if (deliveryBoy.socketId) {
+          await socketEmitEventHandler(
+            "new-order-assignment",
+            deliveryAssignment,
+            deliveryBoy.socketId
+          );
+        }
+      }
     }
     await order.save();
     await order.populate("user");
+    await socketEmitEventHandler("update-order-status", {
+      orderId: order._id,
+      status: order.status,
+    });
     return NextResponse.json(
       {
         assignment: order.orderAssignment?._id,

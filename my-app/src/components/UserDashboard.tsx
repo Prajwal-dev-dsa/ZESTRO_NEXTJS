@@ -7,9 +7,7 @@ import { Flame } from "lucide-react"
 
 async function UserDashboard() {
     await ConnectDB()
-
     const grocery = await groceryModel.find({}).sort({ createdAt: -1 }).lean();
-
     const plainGrocery: IGrocery[] = grocery.map((doc: any) => ({
         ...doc,
         _id: doc._id.toString(),
@@ -42,8 +40,8 @@ async function UserDashboard() {
                 {/* --- Grid Layout Adjusted for Mobile --- */}
                 {plainGrocery.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
-                        {plainGrocery.map((item) => (
-                            <GroceryItemCard key={item._id as string} item={item} />
+                        {plainGrocery.map((item, idx) => (
+                            <GroceryItemCard key={idx} item={item} />
                         ))}
                     </div>
                 ) : (

@@ -6,6 +6,7 @@ import axios from 'axios';
 
 dotenv.config();
 const app = express();
+app.use(express.json());
 
 const server = http.createServer(app)
 const port = process.env.PORT || 5000
@@ -54,6 +55,17 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         console.log(`User disconnected: ${socket.id}`);
     })
+})
+
+app.post("/notify", (req, res) => {
+    const { event, data, socketId } = req.body
+    if (socketId) {
+        io.to(socketId).emit(event, data)
+    }
+    else {
+        io.emit(event, data)
+    }
+    res.status(200).json({ message: "Notification sent successfully" })
 })
 
 server.listen(port, () => {

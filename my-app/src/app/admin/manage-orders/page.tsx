@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { IOrder } from "@/models/order.model";
 import AdminOrderCard from "@/components/AdminOrderCard";
+import { initSocket } from "@/lib/socket.io";
 
 export default function AdminOrdersPage() {
     const [orders, setOrders] = useState<IOrder[]>([]);
@@ -14,7 +15,16 @@ export default function AdminOrdersPage() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
 
-    // --- Fetch Orders ---
+    useEffect(() => {
+        const socket = initSocket();
+        socket.on("new-order", (order) => {
+            setOrders((prev) => [order, ...prev])
+        });
+        return () => {
+            socket.off("new-order");
+        }
+    }, [])
+
     useEffect(() => {
         const fetchAllOrders = async () => {
             try {
@@ -32,7 +42,6 @@ export default function AdminOrdersPage() {
         fetchAllOrders();
     }, []);
 
-    // --- Search Logic ---
     useEffect(() => {
         if (!searchQuery) {
             setFilteredOrders(orders);
