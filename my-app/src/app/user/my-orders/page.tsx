@@ -6,7 +6,42 @@ import { motion } from "motion/react";
 import OrderCard from "@/components/UserOrderCard";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { IOrder } from "@/models/order.model";
+import mongoose from "mongoose";
+import { IUser } from "@/models/user.model";
+
+
+interface IOrder {
+    _id?: mongoose.Types.ObjectId;
+    user: mongoose.Types.ObjectId;
+    items: [
+        {
+            grocery: mongoose.Types.ObjectId;
+            name: string;
+            unit: string;
+            image: string;
+            quantity: number;
+            price: string;
+        }
+    ];
+    totalAmount: number;
+    paymentMethod: "cod" | "online";
+    address: {
+        name: string;
+        mobile: string;
+        city: string;
+        state: string;
+        pincode: string;
+        fullAddress: string;
+        latitude: number;
+        longitude: number;
+    };
+    status: "pending" | "out of delivery" | "delivered";
+    isPaid: boolean;
+    orderAssignment?: mongoose.Types.ObjectId;
+    assignedDeliveryBoy?: IUser;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
 
 export default function MyOrdersPage() {
     const [orders, setOrders] = useState<IOrder[]>([]);

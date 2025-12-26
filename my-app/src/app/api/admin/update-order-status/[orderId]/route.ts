@@ -29,7 +29,7 @@ export async function PUT(
               type: "Point",
               coordinates: [longitude, latitude],
             },
-            $maxDistance: 10000,
+            $maxDistance: 10000000000, // currently done this much for testing purposes
           },
         },
       });

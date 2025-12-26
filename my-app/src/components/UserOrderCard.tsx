@@ -9,11 +9,51 @@ import {
     MapPin,
     CreditCard,
     Calendar,
-    HandCoins
+    HandCoins,
+    User,
+    Phone,
+    Truck
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { IOrder } from "@/models/order.model";
 import { initSocket } from "@/lib/socket.io";
+import Link from "next/link";
+
+import mongoose from "mongoose";
+import { IUser } from "@/models/user.model";
+
+
+interface IOrder {
+    _id?: mongoose.Types.ObjectId;
+    user: mongoose.Types.ObjectId;
+    items: [
+        {
+            grocery: mongoose.Types.ObjectId;
+            name: string;
+            unit: string;
+            image: string;
+            quantity: number;
+            price: string;
+        }
+    ];
+    totalAmount: number;
+    paymentMethod: "cod" | "online";
+    address: {
+        name: string;
+        mobile: string;
+        city: string;
+        state: string;
+        pincode: string;
+        fullAddress: string;
+        latitude: number;
+        longitude: number;
+    };
+    status: "pending" | "out of delivery" | "delivered";
+    isPaid: boolean;
+    orderAssignment?: mongoose.Types.ObjectId;
+    assignedDeliveryBoy?: IUser;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
 
 interface OrderCardProps {
     order: IOrder;
@@ -37,10 +77,6 @@ export default function OrderCard({ order, index }: OrderCardProps) {
         }
     }
 
-    const paymentColors = {
-        Paid: "bg-green-50 text-green-600 border-green-100",
-        Unpaid: "bg-red-50 text-red-600 border-red-100",
-    };
 
     useEffect(() => {
         const socket = initSocket();
@@ -72,10 +108,6 @@ export default function OrderCard({ order, index }: OrderCardProps) {
                             <h3 className="text-lg md:text-xl font-extrabold text-blue-600 tracking-tight">
                                 <span className="text-slate-800">Order</span> #{order?._id?.toString()?.slice(0, 15)}
                             </h3>
-                            {/* Mobile Status Badge */}
-                            <span className={`md:hidden px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${paymentColors[order.isPaid ? "Paid" : "Unpaid"]}`}>
-                                {order.isPaid ? "Paid" : "Unpaid"}
-                            </span>
                         </div>
                         <div className="flex items-center gap-2 text-slate-400 text-xs md:text-sm font-medium">
                             <Calendar className="w-3.5 h-3.5" />
@@ -83,12 +115,6 @@ export default function OrderCard({ order, index }: OrderCardProps) {
                         </div>
                     </div>
 
-                    {/* Desktop Status Badges */}
-                    <div className="hidden md:flex items-center gap-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wider ${paymentColors[order.isPaid ? "Paid" : "Unpaid"]}`}>
-                            {order.isPaid ? "Paid" : "Unpaid"}
-                        </span>
-                    </div>
                 </div>
             </div>
 
@@ -104,7 +130,7 @@ export default function OrderCard({ order, index }: OrderCardProps) {
                         </div>
                         <div>
                             <p className="text-xs text-slate-500 font-bold uppercase tracking-wide mb-0.5">Payment</p>
-                            <p className="text-slate-700 font-medium text-sm">{order.paymentMethod == "cod" ? "Cash On Delivery" : "Online"}</p>
+                            <p className="text-slate-700 font-medium text-sm capitalize">{order.paymentMethod == "cod" ? "Cash On Delivery" : "Online"}</p>
                         </div>
                     </div>
 
@@ -119,6 +145,53 @@ export default function OrderCard({ order, index }: OrderCardProps) {
                         </div>
                     </div>
                 </div>
+
+                {/* --- ASSIGNED DELIVERY BOY SECTION --- */}
+                {/* Only show if a delivery boy is assigned */}
+                {order.assignedDeliveryBoy && (
+                    <div className="mb-6 space-y-4">
+                        {/* Delivery Boy Info Card */}
+                        <div className="bg-blue-50/50 rounded-2xl p-4 border border-blue-100 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                {/* Avatar Icon */}
+                                <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-sm text-blue-600 border border-blue-100">
+                                    <User className="w-6 h-6" />
+                                </div>
+
+                                {/* Details */}
+                                <div className="flex flex-col">
+                                    <span className="text-sm text-slate-500 font-medium leading-none mb-2">
+                                        Assigned To: <span className="text-slate-800 font-bold">{order.assignedDeliveryBoy.name}</span>
+                                    </span>
+                                    <div className="flex items-center gap-1 text-slate-600">
+                                        <Phone className="w-4 h-4" />
+                                        <span className="text-sm font-semibold font-mono">{order.assignedDeliveryBoy.mobile}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Call Button */}
+                            <a
+                                href={`tel:${order.assignedDeliveryBoy.mobile}`}
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-md shadow-blue-200 transition-transform active:scale-95"
+                            >
+                                Call
+                            </a>
+                        </div>
+
+                        {/* Track Order Button */}
+                        {/* Only show if out of delivery or assigned */}
+                        {(status === 'out of delivery' || status === 'assigned') && (
+                            <Link
+                                href={`/user/track-order/${order._id}`}
+                                className="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold text-base shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 active:translate-y-0"
+                            >
+                                <Truck className="w-5 h-5" />
+                                Track Your Order
+                            </Link>
+                        )}
+                    </div>
+                )}
 
                 {/* --- Accordion Toggle --- */}
                 <div
@@ -173,7 +246,7 @@ export default function OrderCard({ order, index }: OrderCardProps) {
             {/* --- Card Footer --- */}
             <div className="p-4 md:p-5 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2 text-sm">
-                    <div className={`w-2 h-2 rounded-full animate-pulse`} />
+                    <div className={`w-2 h-2 rounded-full animate-pulse ${status === 'delivered' ? 'bg-green-500' : 'bg-blue-500'}`} />
                     <span className="text-slate-600 font-medium">
                         Delivery: <span className={`text-xs font-bold uppercase ${statusColors(status)}`}>{status.toUpperCase()}</span>
                     </span>

@@ -16,8 +16,43 @@ import {
     HandCoins
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { IOrder } from "@/models/order.model";
 import axios from "axios";
+import mongoose from "mongoose";
+import { IUser } from "@/models/user.model";
+
+
+interface IOrder {
+    _id?: mongoose.Types.ObjectId;
+    user: mongoose.Types.ObjectId;
+    items: [
+        {
+            grocery: mongoose.Types.ObjectId;
+            name: string;
+            unit: string;
+            image: string;
+            quantity: number;
+            price: string;
+        }
+    ];
+    totalAmount: number;
+    paymentMethod: "cod" | "online";
+    address: {
+        name: string;
+        mobile: string;
+        city: string;
+        state: string;
+        pincode: string;
+        fullAddress: string;
+        latitude: number;
+        longitude: number;
+    };
+    status: "pending" | "out of delivery" | "delivered";
+    isPaid: boolean;
+    orderAssignment?: mongoose.Types.ObjectId;
+    assignedDeliveryBoy?: IUser;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
 
 interface AdminOrderCardProps {
     order: IOrder;
@@ -37,10 +72,6 @@ export default function AdminOrderCard({ order, index }: AdminOrderCardProps) {
             default: return 'bg-gray-100 text-gray-700';
         }
     };
-
-    const paymentBadgeColor = order.isPaid
-        ? "bg-green-50 text-green-600 border-green-100"
-        : "bg-red-50 text-red-600 border-red-100";
 
     const updateOrderStatus = async (orderId: string, status: string) => {
         setStatus(status)
@@ -78,10 +109,6 @@ export default function AdminOrderCard({ order, index }: AdminOrderCardProps) {
                             <h3 className="text-lg font-extrabold text-slate-800 tracking-tight">
                                 Order <span className="text-blue-600">#{order?._id?.toString()?.slice(0, 8)}</span>
                             </h3>
-                            {/* Payment Status Badge */}
-                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${paymentBadgeColor}`}>
-                                {order.isPaid ? "Paid" : "Unpaid"}
-                            </span>
                         </div>
 
                         <div className="flex items-center gap-2 text-slate-400 text-xs md:text-sm font-medium pl-1">
@@ -114,7 +141,7 @@ export default function AdminOrderCard({ order, index }: AdminOrderCardProps) {
 
             {/* --- Customer & Delivery Details --- */}
             <div className="p-5 md:p-6">
-                <div className="grid grid-cols-1 gap-4 mb-4">
+                <div className="grid grid-cols-1 gap-4 mb-6">
 
                     {/* Customer Name */}
                     <div className="flex items-center gap-3">
@@ -147,6 +174,38 @@ export default function AdminOrderCard({ order, index }: AdminOrderCardProps) {
                     </div>
 
                 </div>
+
+                {/* --- Assigned Delivery Boy Section --- */}
+                {order.assignedDeliveryBoy && (
+                    <div className="bg-blue-50/50 rounded-2xl p-4 mb-6 border border-blue-100 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            {/* Avatar Icon */}
+                            <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-sm text-blue-600 border border-blue-100">
+                                <User className="w-6 h-6" />
+                            </div>
+
+                            {/* Details */}
+                            <div className="flex flex-col">
+                                <span className="text-sm text-slate-500 font-medium leading-none mb-2">
+                                    Assigned To: <span className="text-slate-800 font-bold">{order.assignedDeliveryBoy.name}</span>
+                                </span>
+                                <div className="flex items-center gap-1 text-slate-600">
+                                    <Phone className="w-4 h-4" />
+                                    <span className="text-sm font-bold font-mono">+91 {order.assignedDeliveryBoy.mobile}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Call Button */}
+                        <a
+                            href={`tel:${order.assignedDeliveryBoy.mobile}`}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-md shadow-blue-200 transition-transform active:scale-95"
+                        >
+                            Call
+                        </a>
+                    </div>
+                )}
+
 
                 {/* --- Accordion Toggle --- */}
                 <div className="border-t border-gray-100 pt-4">

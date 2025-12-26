@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const orders = await OrderModel.find({})
-      .populate("user")
+      .populate("user assignedDeliveryBoy")
       .sort({ createdAt: -1 });
     if (!orders) {
       return NextResponse.json(
