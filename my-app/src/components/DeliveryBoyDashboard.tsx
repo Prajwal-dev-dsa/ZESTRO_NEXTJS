@@ -15,13 +15,26 @@ import {
     Navigation,
     ChevronDown,
     ChevronUp,
-    Package
+    Package,
+    Loader2
 } from "lucide-react"
 import { initSocket } from "@/lib/socket.io"
 import { useSelector } from "react-redux"
 import { RootState } from "@/redux/store"
 import Image from "next/image"
 import Link from "next/link"
+import dynamic from "next/dynamic"
+
+// --- Dynamic Map Import ---
+const LiveMapTracking = dynamic(() => import("@/components/LiveMapTracking"), {
+    ssr: false,
+    loading: () => (
+        <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-400">
+            <Loader2 className="w-8 h-8 animate-spin" />
+            <span className="ml-2">Loading Map...</span>
+        </div>
+    )
+})
 
 
 interface Address {
@@ -32,6 +45,8 @@ interface Address {
     pincode: string
     houseNumber?: string
     fullAddress: string
+    latitude: number;
+    longitude: number;
 }
 
 interface DeliveryBoy {
@@ -73,6 +88,12 @@ interface Assignment {
     updatedAt: string
 }
 
+interface AssignmentCardProps {
+    data: Assignment
+    onAccept: () => void
+    onReject: () => void
+}
+
 // --- Main Dashboard Component ---
 
 export default function DeliveryBoyDashboard() {
@@ -80,32 +101,45 @@ export default function DeliveryBoyDashboard() {
     const [assignments, setAssignments] = useState<Assignment[]>([])
     const [activeOrder, setActiveOrder] = useState<Order | null>(null)
     const [loading, setLoading] = useState<boolean>(true)
+
+    // Default 0,0. Map won't render until these are populated.
     const [userLocation, setUserLocation] = useState<Location>({ latitude: 0, longitude: 0 })
     const [deliveryBoyLocation, setDeliveryBoyLocation] = useState<Location>({ latitude: 0, longitude: 0 })
 
+    // --- 1. Geolocation Tracking ---
     useEffect(() => {
-        const socket = initSocket();
         if (!userData?._id || !navigator.geolocation) return;
-        const watcher = navigator.geolocation.watchPosition((position) => {
-            const { latitude, longitude } = position.coords
-            setDeliveryBoyLocation({
-                latitude,
-                longitude
-            })
-            socket.emit("updateLocation", { userId: userData?._id, latitude, longitude })
-        }, (err) => {
-            console.log(`Error in GeoLocationUpdater: ${err}`)
-        },
+
+        const socket = initSocket();
+
+        const watcher = navigator.geolocation.watchPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords
+
+                // Update Local State for the Map
+                setDeliveryBoyLocation({ latitude, longitude })
+
+                // Emit to Server
+                socket.emit("updateLocation", { userId: userData._id, latitude, longitude })
+            },
+            (err) => {
+                console.log(`Error in GeoLocationUpdater: ${err.message}`)
+            },
             {
-                enableHighAccuracy: true
-            })
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 5000
+            }
+        )
+
         return () => {
             navigator.geolocation.clearWatch(watcher)
         }
     }, [userData?._id])
 
 
-    // 1. Fetch available assignments (Broadcasted)
+    // --- 2. API Fetching ---
+
     const getAllOrderAssignments = async () => {
         try {
             const res = await axios.get<Assignment[]>(`/api/delivery/get-all-order-assignments`)
@@ -115,17 +149,21 @@ export default function DeliveryBoyDashboard() {
         }
     }
 
-    // 2. Fetch active/assigned order details (Accepted)
     const getAssignedOrderDetails = async () => {
         try {
             const res = await axios.get(`/api/delivery/assigned-order-details`)
-            console.log("Active Order Data:", res.data);
-            if (res.data) {
-                setUserLocation({ latitude: res.data[0].address.latitude, longitude: res.data[0].address.longitude })
-            }
-            console.log("Active location:", res.data[0].address.latitude);
+
             if (res.data && res.data.length > 0) {
-                setActiveOrder(res.data[0] || res.data);
+                const order = res.data[0];
+                setActiveOrder(order);
+
+                // Set Customer Location from Order Address
+                if (order.address && order.address.latitude && order.address.longitude) {
+                    setUserLocation({
+                        latitude: order.address.latitude,
+                        longitude: order.address.longitude
+                    })
+                }
             } else {
                 setActiveOrder(null);
             }
@@ -136,7 +174,7 @@ export default function DeliveryBoyDashboard() {
         }
     }
 
-    // Initial Fetch
+    // Initial Data Load
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
@@ -146,7 +184,7 @@ export default function DeliveryBoyDashboard() {
         fetchData();
     }, [userData])
 
-    // Socket Listener
+    // Socket Listener for New Assignments
     useEffect(() => {
         const socket = initSocket()
         const handleNewAssignment = (deliveryAssignment: Assignment) => {
@@ -164,15 +202,15 @@ export default function DeliveryBoyDashboard() {
         }
     }, [activeOrder])
 
-    // Handlers
+    // --- Action Handlers ---
+
     const handleAccept = async (assignmentId: string) => {
         try {
-            const res = await axios.get(`/api/delivery/assignment/${assignmentId}/accept-assignment`)
+            await axios.get(`/api/delivery/assignment/${assignmentId}/accept-assignment`)
             setAssignments((prev) => prev.filter((item) => item._id !== assignmentId))
             setLoading(true);
             await getAssignedOrderDetails();
             setLoading(false);
-
         } catch (error) {
             console.log(`Error in handleAccept`, error);
         }
@@ -188,9 +226,8 @@ export default function DeliveryBoyDashboard() {
         <div className="min-h-screen bg-slate-50 relative pb-20 font-sans">
             <main className="max-w-3xl mx-auto px-4 pt-6">
 
-                {/* CONDITIONAL RENDERING */}
                 {activeOrder ? (
-                    // --- VIEW 1: Active Order (The "Active Delivery" UI) ---
+                    // --- Active Delivery View ---
                     <div className="mt-24 space-y-6">
                         <div className="mb-4">
                             <h2 className="text-2xl font-extrabold text-slate-800 flex items-center gap-2">
@@ -199,10 +236,14 @@ export default function DeliveryBoyDashboard() {
                             </h2>
                             <p className="text-slate-500 text-sm">You are currently assigned to this order.</p>
                         </div>
-                        <ActiveOrderCard order={activeOrder} userLocation={userLocation} deliveryBoyLocation={deliveryBoyLocation} />
+                        <ActiveOrderCard
+                            order={activeOrder}
+                            userLocation={userLocation}
+                            deliveryBoyLocation={deliveryBoyLocation}
+                        />
                     </div>
                 ) : (
-                    // --- VIEW 2: Assignment List (Accept/Reject) ---
+                    // --- Assignments List View ---
                     <div className="mt-24 space-y-6">
                         <div className="mb-4">
                             <h2 className="text-xl font-bold text-slate-800">New Assignments</h2>
@@ -231,7 +272,7 @@ export default function DeliveryBoyDashboard() {
     )
 }
 
-// --- COMPONENT: Active Order Card ---
+// --- Sub Components ---
 
 function ActiveOrderCard({ order, userLocation, deliveryBoyLocation }: { order: Order, userLocation: Location, deliveryBoyLocation: Location }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -259,8 +300,7 @@ function ActiveOrderCard({ order, userLocation, deliveryBoyLocation }: { order: 
 
             {/* Body */}
             <div className="p-6 pt-4">
-
-                {/* 1. Address Details (Where to go) */}
+                {/* 1. Address */}
                 <div className="space-y-4 mb-6">
                     <div className="flex items-start gap-3">
                         <div className="min-w-[24px] mt-0.5">
@@ -271,7 +311,6 @@ function ActiveOrderCard({ order, userLocation, deliveryBoyLocation }: { order: 
                             <p className="font-medium text-slate-700 text-sm leading-relaxed">{order.address.fullAddress}</p>
                         </div>
                     </div>
-
                     <div className="flex items-center gap-3">
                         <div className="min-w-[24px]">
                             <CreditCard className="w-5 h-5 text-blue-600" />
@@ -283,7 +322,7 @@ function ActiveOrderCard({ order, userLocation, deliveryBoyLocation }: { order: 
                     </div>
                 </div>
 
-                {/* 2. CUSTOMER CONTACT Section */}
+                {/* 2. Customer Contact */}
                 <div className="bg-blue-50/50 rounded-2xl p-4 mb-5 border border-blue-100 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-blue-100 text-blue-600 shadow-sm">
@@ -295,20 +334,36 @@ function ActiveOrderCard({ order, userLocation, deliveryBoyLocation }: { order: 
                             <p className="text-xs text-slate-500 font-mono">{order.address.mobile}</p>
                         </div>
                     </div>
-                    {/* Calls the CUSTOMER */}
                     <a href={`tel:${order.address.mobile}`} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-md shadow-blue-200 hover:bg-blue-700 transition-colors active:scale-95">
                         Call
                     </a>
                 </div>
 
-                {/* 3. TRACKING BUTTON */}
-                <Link
-                    href={`/delivery/track/${order._id}`}
-                    className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all mb-6 active:translate-y-0"
-                >
-                    <Navigation className="w-5 h-5" />
-                    Track Order
-                </Link>
+                {/* 3. TRACKING & MAP */}
+                <div className="mb-6">
+                    <Link
+                        href={`/delivery/track/${order._id}`}
+                        className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all active:translate-y-0 mb-4"
+                    >
+                        <Navigation className="w-5 h-5" />
+                        Full Screen Map
+                    </Link>
+
+                    {/* LIVE MAP WIDGET */}
+                    {(userLocation.latitude !== 0 && deliveryBoyLocation.latitude !== 0) ? (
+                        <div className="w-full h-64 rounded-2xl overflow-hidden border border-blue-100 shadow-inner relative z-0">
+                            <LiveMapTracking
+                                userLocation={userLocation}
+                                deliveryBoyLocation={deliveryBoyLocation}
+                            />
+                        </div>
+                    ) : (
+                        <div className="w-full h-24 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 text-sm border border-dashed border-gray-200">
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            Waiting for location signal...
+                        </div>
+                    )}
+                </div>
 
                 {/* 4. Items Accordion */}
                 <div className="border-t border-gray-100 pt-4">
@@ -353,7 +408,6 @@ function ActiveOrderCard({ order, userLocation, deliveryBoyLocation }: { order: 
                 </div>
             </div>
 
-            {/* Footer Total */}
             <div className="bg-slate-50/50 p-5 border-t border-slate-100 flex justify-between items-center">
                 <span className="text-sm font-medium text-slate-500">Total Amount</span>
                 <span className="text-xl font-extrabold text-slate-800">₹{order.totalAmount}</span>
@@ -362,30 +416,14 @@ function ActiveOrderCard({ order, userLocation, deliveryBoyLocation }: { order: 
     )
 }
 
-// --- COMPONENT: Assignment Card (Accept/Reject) ---
-
-interface AssignmentCardProps {
-    data: Assignment
-    onAccept: () => void
-    onReject: () => void
-}
-
 function AssignmentCard({ data, onAccept, onReject }: AssignmentCardProps) {
     const { order } = data
     const address = order.address
-
     const formatPrice = (amount: number) => {
         return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount)
     }
-
     return (
-        <motion.div
-            layout
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow duration-300"
-        >
+        <motion.div layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
             <div className="px-5 py-4 bg-slate-50/50 border-b border-slate-100 flex justify-between items-center">
                 <div className="flex flex-col">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order ID</span>
@@ -399,7 +437,6 @@ function AssignmentCard({ data, onAccept, onReject }: AssignmentCardProps) {
                     Broadcasted
                 </div>
             </div>
-
             <div className="p-5">
                 <div className="flex gap-3 mb-5">
                     <div className="mt-1 min-w-[32px] h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
@@ -413,7 +450,6 @@ function AssignmentCard({ data, onAccept, onReject }: AssignmentCardProps) {
                         </p>
                     </div>
                 </div>
-
                 <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
                     <div className="flex flex-col pl-2">
                         <span className="text-xs text-slate-500 mb-1 flex items-center gap-1"><DollarSign size={12} /> Amount</span>
@@ -427,46 +463,26 @@ function AssignmentCard({ data, onAccept, onReject }: AssignmentCardProps) {
                     </div>
                 </div>
             </div>
-
             <div className="p-4 pt-0 grid grid-cols-2 gap-3">
-                <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={onReject}
-                    className="flex items-center cursor-pointer justify-center gap-2 py-3 rounded-xl border border-red-200 text-red-600 font-semibold hover:bg-red-50 transition-colors text-sm"
-                >
-                    <XCircle size={18} />
-                    Reject
+                <motion.button whileTap={{ scale: 0.97 }} onClick={onReject} className="flex items-center cursor-pointer justify-center gap-2 py-3 rounded-xl border border-red-200 text-red-600 font-semibold hover:bg-red-50 transition-colors text-sm">
+                    <XCircle size={18} /> Reject
                 </motion.button>
-
-                <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={onAccept}
-                    className="flex items-center cursor-pointer justify-center gap-2 py-3 rounded-xl bg-blue-600 text-white font-semibold shadow-md shadow-blue-200 hover:bg-blue-700 transition-colors text-sm"
-                >
-                    <CheckCircle size={18} />
-                    Accept
+                <motion.button whileTap={{ scale: 0.97 }} onClick={onAccept} className="flex items-center cursor-pointer justify-center gap-2 py-3 rounded-xl bg-blue-600 text-white font-semibold shadow-md shadow-blue-200 hover:bg-blue-700 transition-colors text-sm">
+                    <CheckCircle size={18} /> Accept
                 </motion.button>
             </div>
         </motion.div>
     )
 }
 
-// --- Sub Components ---
-
 function EmptyState() {
     return (
-        <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center py-20 text-center"
-        >
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-4 text-blue-300 ring-4 ring-blue-50/50">
                 <Clock size={40} strokeWidth={1.5} />
             </div>
             <h3 className="text-lg font-bold text-slate-700">No Assignments Yet</h3>
-            <p className="text-slate-500 max-w-xs mx-auto mt-2 text-sm">
-                We are looking for orders near you. Please stay online and wait for a notification.
-            </p>
+            <p className="text-slate-500 max-w-xs mx-auto mt-2 text-sm">We are looking for orders near you. Please stay online and wait for a notification.</p>
         </motion.div>
     )
 }

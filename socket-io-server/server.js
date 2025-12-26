@@ -38,9 +38,10 @@ io.on("connection", (socket) => {
 
         const location = {
             type: "Point",
-            coordinates: [longitude, latitude]
+            coordinates: [longitude, latitude] // GeoJSON format: [Lng, Lat]
         }
 
+        // 1. Update DB (Optional for persistence)
         try {
             await axios.post(`${process.env.NEXTJS_URL}/api/socket-io/update-location`, {
                 userId,
@@ -50,6 +51,12 @@ io.on("connection", (socket) => {
         } catch (error) {
             console.error("Error updating location in DB:", error.message);
         }
+
+        // 2. Broadcast to Frontend Listeners
+        io.emit("update-deliveryBoy-location", {
+            userId,
+            location
+        })
     })
 
     socket.on("disconnect", () => {

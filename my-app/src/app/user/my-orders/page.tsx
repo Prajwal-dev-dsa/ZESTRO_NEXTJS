@@ -3,15 +3,22 @@
 import Link from "next/link";
 import { ArrowLeft, ShoppingBag, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
-import OrderCard from "@/components/UserOrderCard";
+import UserOrderCard from "@/components/UserOrderCard";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import mongoose from "mongoose";
-import { IUser } from "@/models/user.model";
 
+interface IUser {
+    _id: string;
+    name: string;
+    mobile: string;
+    email: string;
+    image?: string;
+}
 
+// 2. Updated to match UserOrderCard's flexible types (string | ObjectId)
 interface IOrder {
-    _id?: mongoose.Types.ObjectId;
+    _id?: mongoose.Types.ObjectId | string;
     user: mongoose.Types.ObjectId;
     items: [
         {
@@ -38,8 +45,8 @@ interface IOrder {
     status: "pending" | "out of delivery" | "delivered";
     isPaid: boolean;
     orderAssignment?: mongoose.Types.ObjectId;
-    assignedDeliveryBoy?: IUser;
-    createdAt?: Date;
+    assignedDeliveryBoy?: IUser; // Now uses the local IUser interface
+    createdAt?: Date | string;
     updatedAt?: Date;
 }
 
@@ -50,11 +57,12 @@ export default function MyOrdersPage() {
     useEffect(() => {
         const fetchAllOrders = async () => {
             try {
-                const res = await axios.get(`/api/user/my-orders`)
+                const res = await axios.get<IOrder[]>(`/api/user/my-orders`)
                 setOrders(res.data)
-                setLoading(false)
             } catch (error) {
-                console.log("Error in fetching all orders");
+                console.log("Error in fetching all orders", error);
+            } finally {
+                setLoading(false)
             }
         }
         fetchAllOrders()
@@ -64,7 +72,7 @@ export default function MyOrdersPage() {
         <div className="min-h-screen bg-slate-50/50 pb-20">
 
             {/* --- Sticky Header --- */}
-            <div className="bg-white border-b border-gray-100 sticky top-0 z-30 shadow-sm backdrop-blur-md  supports-backdrop-filter:bg-white/60">
+            <div className="bg-white border-b border-gray-100 sticky top-0 z-30 shadow-sm backdrop-blur-md supports-backdrop-filter:bg-white/60">
                 <div className="max-w-3xl mx-auto px-4 md:px-8 py-4 flex items-center gap-4">
                     <Link
                         href="/"
@@ -89,7 +97,7 @@ export default function MyOrdersPage() {
                     // Order List
                     <div>
                         {orders.map((order, index) => (
-                            <OrderCard key={index} order={order} index={index} />
+                            <UserOrderCard key={order._id?.toString() || index} order={order} index={index} />
                         ))}
 
                         <div className="text-center mt-10 mb-6">
