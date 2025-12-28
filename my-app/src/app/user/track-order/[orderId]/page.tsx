@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { initSocket } from "@/lib/socket.io"
 import { ArrowLeft, Phone, User, Loader2, Navigation } from "lucide-react"
 import dynamic from "next/dynamic"
+import DeliveryChat from "@/components/DeliveryChat";
 
 const LiveMapTracking = dynamic(() => import("@/components/LiveMapTracking"), {
     ssr: false,
@@ -31,6 +32,8 @@ export default function TrackOrderPage() {
 
     const [userLocation, setUserLocation] = useState<Location>({ latitude: 0, longitude: 0 })
     const [driverLocation, setDriverLocation] = useState<Location>({ latitude: 0, longitude: 0 })
+
+    const currentUserId = order?.user;
 
     useEffect(() => {
         const getOrderDetails = async () => {
@@ -198,6 +201,13 @@ export default function TrackOrderPage() {
                     </div>
                 </div>
             </main>
+            {order && deliveryBoy && currentUserId && (
+                <DeliveryChat
+                    orderId={order._id.toString()}
+                    currentUserId={currentUserId} // I am the User
+                    otherPartyName={deliveryBoy.name || "Delivery Partner"} // I am chatting with the Delivery Boy
+                />
+            )}
         </div>
     )
 }

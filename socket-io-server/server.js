@@ -59,6 +59,23 @@ io.on("connection", (socket) => {
         })
     })
 
+    socket.on("join-chat-room", (roomId) => {
+        socket.join(roomId)
+    })
+
+    socket.on("send-message", async (message) => {
+        console.log("Receiving message:", message);
+        try {
+            await axios.post(`${process.env.NEXTJS_URL}/api/chat/save-message`, message);
+            console.log("Message saved successfully to DB");
+
+            // Broadcast to everyone in the room (including sender for confirmation)
+            io.to(message.roomId).emit("receive-message", message);
+        } catch (error) {
+            console.error("Failed to save message:", error.message);
+        }
+    })
+
     socket.on("disconnect", () => {
         console.log(`User disconnected: ${socket.id}`);
     })
