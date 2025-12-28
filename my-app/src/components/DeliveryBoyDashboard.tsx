@@ -274,6 +274,7 @@ export default function DeliveryBoyDashboard() {
                     orderId={activeOrder._id}
                     currentUserId={userData._id.toString()} // I am the Delivery Boy
                     otherPartyName={activeOrder.address.name || "Customer"}   // I am chatting with the Customer
+                    role="delivery_boy"
                 />
             )}
         </div>

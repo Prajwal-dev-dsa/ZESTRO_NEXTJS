@@ -7,7 +7,8 @@ import {
     MessageCircle,
     User,
     Minimize2,
-    Loader2
+    Loader2,
+    Sparkles
 } from "lucide-react";
 import { initSocket } from "@/lib/socket.io";
 import axios from "axios";
@@ -21,15 +22,20 @@ interface Message {
 
 interface DeliveryChatProps {
     orderId: string;
-    currentUserId: string; // The ID of the logged-in person (User or DeliveryBoy)
-    otherPartyName: string; // Name to display in header
+    currentUserId: string;
+    otherPartyName: string;
+    role: string
 }
 
-export default function DeliveryChat({ orderId, currentUserId, otherPartyName }: DeliveryChatProps) {
+export default function DeliveryChat({ orderId, currentUserId, otherPartyName, role }: DeliveryChatProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [inputText, setInputText] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(false);
+
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+    const [aiLoading, setAiLoading] = useState(false);
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const socketRef = useRef<any>(null);
 
@@ -45,10 +51,13 @@ export default function DeliveryChat({ orderId, currentUserId, otherPartyName }:
 
         // B. Listen for messages
         const handleReceiveMessage = (newMessage: Message) => {
-            setMessages((prev) => {
-                return [...prev, newMessage];
-            });
+            setMessages((prev) => [...prev, newMessage]);
             scrollToBottom();
+
+            // Only generate suggestions if the message is from the OTHER person
+            if (newMessage.senderId !== currentUserId) {
+                fetchAiSuggestions(newMessage.text);
+            }
         };
 
         socketRef.current.on("receive-message", handleReceiveMessage);
@@ -59,8 +68,16 @@ export default function DeliveryChat({ orderId, currentUserId, otherPartyName }:
                 const res = await axios.post(`/api/chat/get-particular-room-messages`, {
                     roomId: orderId,
                 });
-                console.log("Chat history fetched:", res.data.length);
-                setMessages(res.data);
+
+                if (res.data && res.data.length > 0) {
+                    setMessages(res.data);
+
+                    // Generate suggestions based on the very last message if it wasn't sent by me
+                    const lastMsg = res.data[res.data.length - 1];
+                    if (lastMsg.senderId !== currentUserId) {
+                        fetchAiSuggestions(lastMsg.text);
+                    }
+                }
                 scrollToBottom();
             } catch (error) {
                 console.error("Failed to fetch chat history:", error);
@@ -75,22 +92,48 @@ export default function DeliveryChat({ orderId, currentUserId, otherPartyName }:
         };
     }, [isOpen, orderId]);
 
+
+    const fetchAiSuggestions = async (lastMessageText: string) => {
+        setAiLoading(true);
+        setSuggestions([]); // Clear old suggestions
+        try {
+            const res = await axios.post(`/api/chat/get-ai-suggestions`, {
+                message: lastMessageText,
+                role: role
+            });
+
+            const rawText = res.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            if (rawText) {
+                const suggestionsArray = rawText.split(',').map((s: string) => s.trim());
+                setSuggestions(suggestionsArray.slice(0, 3));
+            }
+        } catch (error) {
+            console.error("Error fetching AI suggestions:", error);
+        } finally {
+            setAiLoading(false);
+        }
+    }
+
     const scrollToBottom = () => {
         setTimeout(() => {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }, 100);
     };
 
-    const handleSend = async () => {
-        if (!inputText.trim()) return;
+    const handleSend = async (textToSend: string = inputText) => {
+        if (!textToSend.trim()) return;
 
         const newMessage: Message = {
-            text: inputText,
+            text: textToSend,
             senderId: currentUserId,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
+        // Optimistic UI Update
         setInputText("");
+        setSuggestions([]); // Clear suggestions after sending
+        scrollToBottom();
 
         if (socketRef.current) {
             socketRef.current.emit("send-message", {
@@ -100,6 +143,10 @@ export default function DeliveryChat({ orderId, currentUserId, otherPartyName }:
                 time: newMessage.time
             });
         }
+    };
+
+    const handleSuggestionClick = (suggestion: string) => {
+        setInputText(suggestion);
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -122,7 +169,6 @@ export default function DeliveryChat({ orderId, currentUserId, otherPartyName }:
                     >
                         <div className="relative">
                             <MessageCircle className="w-7 h-7" />
-                            {/* Dot only if unread? For now just static */}
                             <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 border-2 border-white rounded-full"></span>
                         </div>
                     </motion.button>
@@ -158,7 +204,7 @@ export default function DeliveryChat({ orderId, currentUserId, otherPartyName }:
                         </div>
 
                         {/* Messages List */}
-                        <div className="flex-1 bg-slate-50 p-4 overflow-y-auto flex flex-col gap-3">
+                        <div className="flex-1 bg-slate-50 p-4 overflow-y-auto flex flex-col gap-3 relative">
                             {loading && (
                                 <div className="flex justify-center py-4">
                                     <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
@@ -192,8 +238,8 @@ export default function DeliveryChat({ orderId, currentUserId, otherPartyName }:
                                     >
                                         <div
                                             className={`px-4 py-2.5 rounded-2xl text-sm shadow-sm relative ${isMe
-                                                ? "bg-blue-600 text-white rounded-tr-none"
-                                                : "bg-white text-slate-700 border border-gray-100 rounded-tl-none"
+                                                    ? "bg-blue-600 text-white rounded-tr-none"
+                                                    : "bg-white text-slate-700 border border-gray-100 rounded-tl-none"
                                                 }`}
                                         >
                                             {msg.text}
@@ -205,6 +251,32 @@ export default function DeliveryChat({ orderId, currentUserId, otherPartyName }:
                                 );
                             })}
                             <div ref={messagesEndRef} />
+                        </div>
+
+                        {/* --- AI Suggestions Area --- */}
+                        <div className="px-4 pb-2 bg-slate-50 min-h-[30px]">
+                            {aiLoading ? (
+                                <div className="flex items-center gap-2 text-xs text-blue-500 animate-pulse">
+                                    <Sparkles className="w-3 h-3" />
+                                    <span>AI is thinking...</span>
+                                </div>
+                            ) : suggestions.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                    {suggestions.map((suggestion, idx) => (
+                                        <motion.button
+                                            key={idx}
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: idx * 0.1 }}
+                                            onClick={() => handleSuggestionClick(suggestion)}
+                                            className="text-xs bg-white border border-blue-100 text-blue-600 px-3 py-1.5 rounded-full shadow-sm hover:bg-blue-50 hover:border-blue-200 transition-colors flex items-center gap-1"
+                                        >
+                                            <Sparkles className="w-2.5 h-2.5 opacity-70" />
+                                            {suggestion}
+                                        </motion.button>
+                                    ))}
+                                </div>
+                            ) : null}
                         </div>
 
                         {/* Input Area */}
@@ -219,10 +291,10 @@ export default function DeliveryChat({ orderId, currentUserId, otherPartyName }:
                             />
                             <motion.button
                                 whileTap={{ scale: 0.9 }}
-                                onClick={handleSend}
+                                onClick={() => handleSend()}
                                 className={`p-3 rounded-xl flex items-center justify-center transition-all ${inputText.trim()
-                                    ? "bg-blue-600 text-white shadow-md cursor-pointer shadow-blue-200"
-                                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                                        ? "bg-blue-600 text-white shadow-md cursor-pointer shadow-blue-200"
+                                        : "bg-slate-100 text-slate-400 cursor-not-allowed"
                                     }`}
                                 disabled={!inputText.trim()}
                             >

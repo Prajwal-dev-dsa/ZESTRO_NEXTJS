@@ -206,6 +206,7 @@ export default function TrackOrderPage() {
                     orderId={order._id.toString()}
                     currentUserId={currentUserId} // I am the User
                     otherPartyName={deliveryBoy.name || "Delivery Partner"} // I am chatting with the Delivery Boy
+                    role="user"
                 />
             )}
         </div>
