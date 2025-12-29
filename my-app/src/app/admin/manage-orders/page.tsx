@@ -5,9 +5,50 @@ import { ArrowLeft, Search, Loader2, PackageX } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { IOrder } from "@/models/order.model";
+import mongoose from "mongoose";
 import AdminOrderCard from "@/components/AdminOrderCard";
 import { initSocket } from "@/lib/socket.io";
+
+interface IUser {
+    _id: string;
+    name: string;
+    mobile: string;
+    email: string;
+    image?: string;
+}
+
+interface IOrder {
+    _id?: mongoose.Types.ObjectId | string;
+    user: mongoose.Types.ObjectId;
+    items: [
+        {
+            grocery: mongoose.Types.ObjectId;
+            name: string;
+            unit: string;
+            image: string;
+            quantity: number;
+            price: string;
+        }
+    ];
+    totalAmount: number;
+    paymentMethod: "cod" | "online";
+    address: {
+        name: string;
+        mobile: string;
+        city: string;
+        state: string;
+        pincode: string;
+        fullAddress: string;
+        latitude: number;
+        longitude: number;
+    };
+    status: "pending" | "out of delivery" | "delivered";
+    isPaid: boolean;
+    orderAssignment?: mongoose.Types.ObjectId;
+    assignedDeliveryBoy?: IUser;
+    createdAt?: Date | string;
+    updatedAt?: Date;
+}
 
 export default function AdminOrdersPage() {
     const [orders, setOrders] = useState<IOrder[]>([]);
@@ -55,6 +96,21 @@ export default function AdminOrdersPage() {
             setFilteredOrders(filtered);
         }
     }, [searchQuery, orders]);
+
+    useEffect(() => {
+        const socket = initSocket()
+        socket.on("assigned-order", ({ orderId, assignedDeliveryBoy }) => {
+            setOrders((prev) => prev.map((ord) => {
+                if (ord._id?.toString() === orderId) {
+                    return { ...ord, assignedDeliveryBoy }
+                }
+                return ord
+            }))
+        })
+        return () => {
+            socket.off("assigned-order")
+        }
+    }, [])
 
     return (
         <div className="min-h-screen bg-slate-50/50 pb-20">
@@ -131,7 +187,6 @@ export default function AdminOrdersPage() {
                         </p>
                     </motion.div>
                 )}
-
             </div>
         </div>
     );

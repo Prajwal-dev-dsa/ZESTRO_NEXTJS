@@ -29,6 +29,9 @@ export interface IOrder {
   isPaid: boolean;
   orderAssignment?: mongoose.Types.ObjectId;
   assignedDeliveryBoy?: mongoose.Types.ObjectId;
+  OTP: string | null;
+  isOtpVerifed: boolean;
+  deliveredAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -89,6 +92,17 @@ const OrderSchema = new mongoose.Schema<IOrder>(
     assignedDeliveryBoy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+    },
+    OTP: {
+      type: String,
+      default: null,
+    },
+    isOtpVerifed: {
+      type: Boolean,
+      default: false,
+    },
+    deliveredAt: {
+      type: Date,
     },
   },
   {

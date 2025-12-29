@@ -3,6 +3,7 @@ import "./globals.css";
 import Provider from "@/Provider";
 import StoreProvider from "@/redux/StoreProvider";
 import InitalizeUser from "@/InitalizeUser";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "Zestro - Groceries. Delivered. Done.",
@@ -20,6 +21,8 @@ export default function RootLayout({
         <Provider>
           <StoreProvider>
             <InitalizeUser />
+            {/* Toaster is using for temporary needs, will remove it later */}
+            <Toaster />
             {children}
           </StoreProvider>
         </Provider>

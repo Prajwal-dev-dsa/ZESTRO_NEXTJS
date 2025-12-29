@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
     Package,
@@ -18,11 +18,19 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import axios from "axios";
 import mongoose from "mongoose";
-import { IUser } from "@/models/user.model";
+import { initSocket } from "@/lib/socket.io";
 
+
+interface IUser {
+    _id: string;
+    name: string;
+    mobile: string;
+    email: string;
+    image?: string;
+}
 
 interface IOrder {
-    _id?: mongoose.Types.ObjectId;
+    _id?: mongoose.Types.ObjectId | string;
     user: mongoose.Types.ObjectId;
     items: [
         {
@@ -50,7 +58,7 @@ interface IOrder {
     isPaid: boolean;
     orderAssignment?: mongoose.Types.ObjectId;
     assignedDeliveryBoy?: IUser;
-    createdAt?: Date;
+    createdAt?: Date | string;
     updatedAt?: Date;
 }
 
@@ -69,6 +77,7 @@ export default function AdminOrderCard({ order, index }: AdminOrderCardProps) {
         switch (currentStatus) {
             case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
             case 'out of delivery': return 'bg-purple-100 text-purple-700 border-purple-200';
+            case 'delivered': return 'bg-green-100 text-green-700 border-green-200';
             default: return 'bg-gray-100 text-gray-700';
         }
     };
@@ -82,6 +91,20 @@ export default function AdminOrderCard({ order, index }: AdminOrderCardProps) {
             console.log(error);
         }
     }
+
+    useEffect(() => {
+        const socket = initSocket()
+        socket.on("update-order-status", ({ orderId, status }) => {
+            if (orderId == order._id) {
+                setStatus(status)
+            }
+        })
+        return () => {
+            socket.off("update-order-status")
+        }
+    }, [])
+
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -118,7 +141,7 @@ export default function AdminOrderCard({ order, index }: AdminOrderCardProps) {
                     </div>
 
                     {/* Right: Admin Status Dropdown */}
-                    <div className="absolute top-5 right-5 md:static md:flex md:flex-col md:items-end">
+                    {status != "delivered" && <div className="absolute top-5 right-5 md:static md:flex md:flex-col md:items-end">
                         <div className="relative group/dropdown">
                             <select
                                 disabled={isUpdating}
@@ -135,12 +158,12 @@ export default function AdminOrderCard({ order, index }: AdminOrderCardProps) {
                                 <ChevronDown className="w-3.5 h-3.5 opacity-50" />
                             </div>
                         </div>
-                    </div>
+                    </div>}
                 </div>
             </div>
 
             {/* --- Customer & Delivery Details --- */}
-            <div className="p-5 md:p-6">
+            {status != 'delivered' && <div className="p-5 md:p-6">
                 <div className="grid grid-cols-1 gap-4 mb-6">
 
                     {/* Customer Name */}
@@ -257,14 +280,14 @@ export default function AdminOrderCard({ order, index }: AdminOrderCardProps) {
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </div>
+            </div>}
 
             {/* --- Card Footer --- */}
             <div className="px-5 py-4 bg-slate-50/50 border-t border-slate-100 flex flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2 text-sm">
                     <Truck className="w-4 h-4 text-slate-400" />
                     <span className="text-slate-600 font-medium hidden xs:inline">Delivery:</span>
-                    <span className={`text-xs font-bold uppercase ${getStatusColor(status)}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${getStatusColor(status)}`}>
                         {status}
                     </span>
                 </div>

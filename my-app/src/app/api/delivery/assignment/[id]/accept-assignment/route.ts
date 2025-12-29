@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import ConnectDB from "@/lib/db";
+import socketEmitEventHandler from "@/lib/socketEmitEventHandler";
 import deliveryModel from "@/models/delivery.model";
 import OrderModel from "@/models/order.model";
 import { NextRequest, NextResponse } from "next/server";
@@ -49,6 +50,11 @@ export async function GET(
     }
     order.assignedDeliveryBoy = deliveryBoyId;
     await order.save();
+    await order.populate("assignedDeliveryBoy");
+    await socketEmitEventHandler("assigned-order", {
+      orderId: order._id,
+      assignedDeliveryBoy: order.assignedDeliveryBoy,
+    });
     await deliveryModel.updateMany(
       {
         _id: { $ne: id },

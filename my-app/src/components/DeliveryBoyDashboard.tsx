@@ -1,7 +1,7 @@
 "use client"
 
 import axios from "axios"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import {
     MapPin,
@@ -11,20 +11,21 @@ import {
     XCircle,
     DollarSign,
     User,
-    Phone,
     Navigation,
     ChevronDown,
     ChevronUp,
     Package,
-    Loader2
+    Loader2,
+    CheckCheck,
+    KeyRound
 } from "lucide-react"
 import { initSocket } from "@/lib/socket.io"
 import { useSelector } from "react-redux"
 import { RootState } from "@/redux/store"
 import Image from "next/image"
-import Link from "next/link"
 import dynamic from "next/dynamic"
 import DeliveryChat from "./DeliveryChat"
+import toast from "react-hot-toast"
 
 // --- Dynamic Map Import ---
 const LiveMapTracking = dynamic(() => import("@/components/LiveMapTracking"), {
@@ -37,7 +38,7 @@ const LiveMapTracking = dynamic(() => import("@/components/LiveMapTracking"), {
     )
 })
 
-
+// --- Interfaces ---
 interface Address {
     name: string
     mobile: string
@@ -116,21 +117,11 @@ export default function DeliveryBoyDashboard() {
         const watcher = navigator.geolocation.watchPosition(
             (position) => {
                 const { latitude, longitude } = position.coords
-
-                // Update Local State for the Map
                 setDeliveryBoyLocation({ latitude, longitude })
-
-                // Emit to Server
                 socket.emit("updateLocation", { userId: userData._id, latitude, longitude })
             },
-            (err) => {
-                console.log(`Error in GeoLocationUpdater: ${err.message}`)
-            },
-            {
-                enableHighAccuracy: true,
-                maximumAge: 0,
-                timeout: 5000
-            }
+            (err) => console.log(`Error in GeoLocationUpdater: ${err.message}`),
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
         )
 
         return () => {
@@ -140,7 +131,6 @@ export default function DeliveryBoyDashboard() {
 
 
     // --- 2. API Fetching ---
-
     const getAllOrderAssignments = async () => {
         try {
             const res = await axios.get<Assignment[]>(`/api/delivery/get-all-order-assignments`)
@@ -155,15 +145,19 @@ export default function DeliveryBoyDashboard() {
             const res = await axios.get(`/api/delivery/assigned-order-details`)
 
             if (res.data && res.data.length > 0) {
-                const order = res.data[0];
-                setActiveOrder(order);
+                // Filter to find the active order (not delivered/completed)
+                const active = res.data.find((o: Order) => o.status !== 'delivered' && o.status !== 'completed');
 
-                // Set Customer Location from Order Address
-                if (order.address && order.address.latitude && order.address.longitude) {
-                    setUserLocation({
-                        latitude: order.address.latitude,
-                        longitude: order.address.longitude
-                    })
+                if (active) {
+                    setActiveOrder(active);
+                    if (active.address && active.address.latitude && active.address.longitude) {
+                        setUserLocation({
+                            latitude: active.address.latitude,
+                            longitude: active.address.longitude
+                        })
+                    }
+                } else {
+                    setActiveOrder(null);
                 }
             } else {
                 setActiveOrder(null);
@@ -189,6 +183,7 @@ export default function DeliveryBoyDashboard() {
     useEffect(() => {
         const socket = initSocket()
         const handleNewAssignment = (deliveryAssignment: Assignment) => {
+            // Only add if we don't have an active order
             if (activeOrder) return;
 
             setAssignments((prev) => {
@@ -206,19 +201,52 @@ export default function DeliveryBoyDashboard() {
     // --- Action Handlers ---
 
     const handleAccept = async (assignmentId: string) => {
+        // 1. Find the assignment locally so we can update UI instantly
+        const selectedAssignment = assignments.find(a => a._id === assignmentId);
+
+        if (!selectedAssignment) return;
+
         try {
+            // 2. Call API to accept
             await axios.get(`/api/delivery/assignment/${assignmentId}/accept-assignment`)
+
+            // 3. OPTIMISTIC UPDATE:
+            // Remove from assignments list
             setAssignments((prev) => prev.filter((item) => item._id !== assignmentId))
-            setLoading(true);
+
+            // Immediately set the active order so the UI switches views instantly
+            // We use the order data from the assignment object
+            setActiveOrder({
+                ...selectedAssignment.order,
+                status: 'out of delivery'
+            });
+
+            // Set user location for map immediately
+            if (selectedAssignment.order.address) {
+                setUserLocation({
+                    latitude: selectedAssignment.order.address.latitude,
+                    longitude: selectedAssignment.order.address.longitude
+                })
+            }
+
+            // 4. Fetch fresh data in background to ensure sync (without loading spinner)
             await getAssignedOrderDetails();
-            setLoading(false);
+
         } catch (error) {
             console.log(`Error in handleAccept`, error);
+            toast.error("Failed to accept order. It might be taken.");
+            getAllOrderAssignments();
         }
     }
 
     const handleReject = async (assignmentId: string) => {
         setAssignments((prev) => prev.filter((item) => item._id !== assignmentId))
+    }
+
+    const handleDeliverySuccess = () => {
+        setActiveOrder(null);
+        toast.success("Order Delivered Successfully!");
+        getAllOrderAssignments();
     }
 
     if (loading) return <LoadingSkeleton />;
@@ -241,6 +269,7 @@ export default function DeliveryBoyDashboard() {
                             order={activeOrder}
                             userLocation={userLocation}
                             deliveryBoyLocation={deliveryBoyLocation}
+                            onDeliverySuccess={handleDeliverySuccess}
                         />
                     </div>
                 ) : (
@@ -272,8 +301,8 @@ export default function DeliveryBoyDashboard() {
             {activeOrder && userData?._id && (
                 <DeliveryChat
                     orderId={activeOrder._id}
-                    currentUserId={userData._id.toString()} // I am the Delivery Boy
-                    otherPartyName={activeOrder.address.name || "Customer"}   // I am chatting with the Customer
+                    currentUserId={userData._id.toString()}
+                    otherPartyName={activeOrder.address.name || "Customer"}
                     role="delivery_boy"
                 />
             )}
@@ -281,18 +310,81 @@ export default function DeliveryBoyDashboard() {
     )
 }
 
-// --- Sub Components ---
+// --- ACTIVE ORDER CARD (With OTP Logic) ---
 
-function ActiveOrderCard({ order, userLocation, deliveryBoyLocation }: { order: Order, userLocation: Location, deliveryBoyLocation: Location }) {
+interface ActiveOrderCardProps {
+    order: Order;
+    userLocation: Location;
+    deliveryBoyLocation: Location;
+    onDeliverySuccess: () => void;
+}
+
+function ActiveOrderCard({ order, userLocation, deliveryBoyLocation, onDeliverySuccess }: ActiveOrderCardProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const [showOtpModal, setShowOtpModal] = useState(false);
+    const [otp, setOtp] = useState(["", "", "", ""]);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [isSendingOtp, setIsSendingOtp] = useState(false);
+    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    const handleSendOTP = async () => {
+        setIsSendingOtp(true);
+        try {
+            await axios.post(`/api/delivery/otp/send-otp`, { orderId: order._id });
+            toast.success("OTP Sent to Customer!");
+            setShowOtpModal(true);
+        } catch (error: any) {
+            console.error(error);
+            toast.error("Failed to send OTP");
+        } finally {
+            setIsSendingOtp(false);
+        }
+    };
+
+    const handleVerifyOTP = async () => {
+        const otpCode = otp.join("");
+        if (otpCode.length !== 4) {
+            toast.error("Please enter a valid 4-digit OTP");
+            return;
+        }
+
+        setIsVerifying(true);
+        try {
+            await axios.post(`/api/delivery/otp/verify-otp`, {
+                orderId: order._id,
+                otp: otpCode,
+            });
+            setShowOtpModal(false);
+            onDeliverySuccess();
+        } catch (error: any) {
+            console.error(error);
+            const msg = error.response?.data?.message || "Invalid OTP";
+            toast.error(msg);
+            setOtp(["", "", "", ""]);
+            inputRefs.current[0]?.focus();
+        } finally {
+            setIsVerifying(false);
+        }
+    };
+
+    const handleOtpChange = (index: number, value: string) => {
+        if (isNaN(Number(value))) return;
+        const newOtp = [...otp];
+        newOtp[index] = value;
+        setOtp(newOtp);
+        if (value && index < 3) inputRefs.current[index + 1]?.focus();
+    };
+
+    const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
+        if (e.key === "Backspace" && !otp[index] && index > 0) inputRefs.current[index - 1]?.focus();
+    };
 
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-3xl border border-blue-100 shadow-xl shadow-blue-100/50 overflow-hidden"
+            className="bg-white rounded-3xl border border-blue-100 shadow-xl shadow-blue-100/50 overflow-hidden relative"
         >
-            {/* Header */}
             <div className="p-6 border-b border-gray-50 bg-blue-50/30">
                 <div className="flex justify-between items-start mb-2">
                     <div>
@@ -307,23 +399,17 @@ function ActiveOrderCard({ order, userLocation, deliveryBoyLocation }: { order: 
                 </div>
             </div>
 
-            {/* Body */}
             <div className="p-6 pt-4">
-                {/* 1. Address */}
                 <div className="space-y-4 mb-6">
                     <div className="flex items-start gap-3">
-                        <div className="min-w-[24px] mt-0.5">
-                            <MapPin className="w-5 h-5 text-blue-600" />
-                        </div>
+                        <MapPin className="w-5 h-5 text-blue-600 mt-0.5" />
                         <div>
                             <p className="text-xs text-slate-400 font-bold uppercase mb-0.5">Delivery Location</p>
                             <p className="font-medium text-slate-700 text-sm leading-relaxed">{order.address.fullAddress}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="min-w-[24px]">
-                            <CreditCard className="w-5 h-5 text-blue-600" />
-                        </div>
+                        <CreditCard className="w-5 h-5 text-blue-600" />
                         <div>
                             <p className="text-xs text-slate-400 font-bold uppercase mb-0.5">Payment Method</p>
                             <span className="font-semibold text-slate-700 capitalize">{order.paymentMethod === 'cod' ? 'Cash On Delivery' : order.paymentMethod}</span>
@@ -331,7 +417,6 @@ function ActiveOrderCard({ order, userLocation, deliveryBoyLocation }: { order: 
                     </div>
                 </div>
 
-                {/* 2. Customer Contact */}
                 <div className="bg-blue-50/50 rounded-2xl p-4 mb-5 border border-blue-100 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-blue-100 text-blue-600 shadow-sm">
@@ -348,23 +433,20 @@ function ActiveOrderCard({ order, userLocation, deliveryBoyLocation }: { order: 
                     </a>
                 </div>
 
-                {/* 3. TRACKING & MAP */}
                 <div className="mb-6">
-                    <Link
-                        href={`/delivery/track/${order._id}`}
-                        className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 transition-all active:translate-y-0 mb-4"
+                    <motion.button
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleSendOTP}
+                        disabled={isSendingOtp}
+                        className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg shadow-green-200 transition-all mb-4 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                        <Navigation className="w-5 h-5" />
-                        Full Screen Map
-                    </Link>
+                        {isSendingOtp ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCheck className="w-5 h-5" />}
+                        {isSendingOtp ? "Sending OTP..." : "Mark as Delivered"}
+                    </motion.button>
 
-                    {/* LIVE MAP WIDGET */}
                     {(userLocation.latitude !== 0 && deliveryBoyLocation.latitude !== 0) ? (
                         <div className="w-full h-64 rounded-2xl overflow-hidden border border-blue-100 shadow-inner relative z-0">
-                            <LiveMapTracking
-                                userLocation={userLocation}
-                                deliveryBoyLocation={deliveryBoyLocation}
-                            />
+                            <LiveMapTracking userLocation={userLocation} deliveryBoyLocation={deliveryBoyLocation} />
                         </div>
                     ) : (
                         <div className="w-full h-24 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 text-sm border border-dashed border-gray-200">
@@ -374,29 +456,19 @@ function ActiveOrderCard({ order, userLocation, deliveryBoyLocation }: { order: 
                     )}
                 </div>
 
-                {/* 4. Items Accordion */}
                 <div className="border-t border-gray-100 pt-4">
-                    <div
-                        onClick={() => setIsOpen(!isOpen)}
-                        className="flex items-center justify-between cursor-pointer group hover:bg-slate-50 p-2 -mx-2 rounded-lg transition-colors"
-                    >
+                    <div onClick={() => setIsOpen(!isOpen)} className="flex items-center justify-between cursor-pointer group hover:bg-slate-50 p-2 -mx-2 rounded-lg transition-colors">
                         <div className="flex items-center gap-2">
                             <Package className="w-4 h-4 text-blue-600" />
-                            <span className="text-sm font-bold text-slate-700 group-hover:text-blue-700 transition-colors">
+                            <span className="text-sm font-bold text-slate-700 group-hover:text-blue-700">
                                 {isOpen ? "Hide Items" : `View ${order.items.length} Items`}
                             </span>
                         </div>
                         {isOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                     </div>
-
                     <AnimatePresence>
                         {isOpen && (
-                            <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                className="overflow-hidden"
-                            >
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                                 <div className="pt-2 space-y-3">
                                     {order.items.map((item, idx) => (
                                         <div key={idx} className="flex items-center gap-3 py-2 border-b border-dashed border-gray-100 last:border-0">
@@ -421,6 +493,33 @@ function ActiveOrderCard({ order, userLocation, deliveryBoyLocation }: { order: 
                 <span className="text-sm font-medium text-slate-500">Total Amount</span>
                 <span className="text-xl font-extrabold text-slate-800">₹{order.totalAmount}</span>
             </div>
+
+            <AnimatePresence>
+                {showOtpModal && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-50 bg-white/95 backdrop-blur-sm flex items-center justify-center p-6">
+                        <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="w-full max-w-sm">
+                            <div className="text-center mb-6">
+                                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
+                                    <KeyRound className="w-8 h-8" />
+                                </div>
+                                <h3 className="text-xl font-bold text-slate-800">Verify Delivery</h3>
+                                <p className="text-slate-500 text-sm mt-1">Ask the customer for the 4-digit OTP sent to their email.</p>
+                            </div>
+                            <div className="flex justify-center gap-3 mb-8">
+                                {otp.map((digit, idx) => (
+                                    <input key={idx} ref={(el) => { inputRefs.current[idx] = el }} type="text" maxLength={1} value={digit} onChange={(e) => handleOtpChange(idx, e.target.value)} onKeyDown={(e) => handleKeyDown(idx, e)} className="w-12 h-14 border-2 border-slate-200 rounded-xl text-center text-2xl font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/20 transition-all bg-white shadow-sm" />
+                                ))}
+                            </div>
+                            <div className="flex flex-col gap-3">
+                                <button onClick={handleVerifyOTP} disabled={isVerifying} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2">
+                                    {isVerifying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify & Complete"}
+                                </button>
+                                <button onClick={() => setShowOtpModal(false)} className="w-full text-slate-500 font-semibold py-3 hover:text-slate-700 transition-colors">Cancel</button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.div>
     )
 }

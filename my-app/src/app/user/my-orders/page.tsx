@@ -7,6 +7,7 @@ import UserOrderCard from "@/components/UserOrderCard";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import mongoose from "mongoose";
+import { initSocket } from "@/lib/socket.io";
 
 interface IUser {
     _id: string;
@@ -16,7 +17,6 @@ interface IUser {
     image?: string;
 }
 
-// 2. Updated to match UserOrderCard's flexible types (string | ObjectId)
 interface IOrder {
     _id?: mongoose.Types.ObjectId | string;
     user: mongoose.Types.ObjectId;
@@ -45,7 +45,7 @@ interface IOrder {
     status: "pending" | "out of delivery" | "delivered";
     isPaid: boolean;
     orderAssignment?: mongoose.Types.ObjectId;
-    assignedDeliveryBoy?: IUser; // Now uses the local IUser interface
+    assignedDeliveryBoy?: IUser;
     createdAt?: Date | string;
     updatedAt?: Date;
 }
@@ -66,6 +66,21 @@ export default function MyOrdersPage() {
             }
         }
         fetchAllOrders()
+    }, [])
+
+    useEffect(() => {
+        const socket = initSocket()
+        socket.on("assigned-order", ({ orderId, assignedDeliveryBoy }) => {
+            setOrders((prev) => prev.map((ord) => {
+                if (ord._id?.toString() === orderId) {
+                    return { ...ord, assignedDeliveryBoy }
+                }
+                return ord
+            }))
+        })
+        return () => {
+            socket.off("assigned-order")
+        }
     }, [])
 
     return (
@@ -125,7 +140,6 @@ export default function MyOrdersPage() {
                         </Link>
                     </motion.div>
                 )}
-
             </div>
         </div>
     );
