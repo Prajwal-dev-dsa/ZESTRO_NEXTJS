@@ -72,7 +72,7 @@ function Navbar({ user }: { user: IUser }) {
                             <Link href={"/admin/add-grocery"} className="flex items-center gap-2 bg-white text-blue-700 font-semibold px-4 py-2 rounded-full hover:bg-blue-50 transition-all">
                                 <PlusCircle className="w-5 h-5" /> Add Grocery
                             </Link>
-                            <Link href={""} className="flex items-center gap-2 bg-white text-blue-700 font-semibold px-4 py-2 rounded-full hover:bg-blue-50 transition-all">
+                            <Link href={"/admin/view-grocery"} className="flex items-center gap-2 bg-white text-blue-700 font-semibold px-4 py-2 rounded-full hover:bg-blue-50 transition-all">
                                 <Boxes className="w-5 h-5" /> View Grocery
                             </Link>
                             <Link href={"/admin/manage-orders"} className="flex items-center gap-2 bg-white text-blue-700 font-semibold px-4 py-2 rounded-full hover:bg-blue-50 transition-all">
@@ -109,7 +109,7 @@ function Navbar({ user }: { user: IUser }) {
                                 </Link>
                             }
                             {
-                                user?.role == "admin" && <Link onClick={() => setOpen(false)} href={""} className="sm:hidden flex items-center gap-2 px-3 py-2 hover:bg-blue-100 rounded-lg text-gray-700 font-medium">
+                                user?.role == "admin" && <Link onClick={() => setOpen(false)} href={"/admin/view-grocery"} className="sm:hidden flex items-center gap-2 px-3 py-2 hover:bg-blue-100 rounded-lg text-gray-700 font-medium">
                                     <Boxes className="size-6 text-blue-600" />
                                     View Groceries
                                 </Link>
