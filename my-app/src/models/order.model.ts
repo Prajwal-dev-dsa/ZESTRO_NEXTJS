@@ -30,7 +30,7 @@ export interface IOrder {
   orderAssignment?: mongoose.Types.ObjectId;
   assignedDeliveryBoy?: mongoose.Types.ObjectId;
   OTP: string | null;
-  isOtpVerifed: boolean;
+  isOtpVerified: boolean;
   deliveredAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
@@ -97,7 +97,7 @@ const OrderSchema = new mongoose.Schema<IOrder>(
       type: String,
       default: null,
     },
-    isOtpVerifed: {
+    isOtpVerified: {
       type: Boolean,
       default: false,
     },

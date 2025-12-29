@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     if (Number(order.OTP) !== Number(otp)) {
       NextResponse.json({ message: "Invalid OTP" }, { status: 400 });
     }
-    order.isOtpVerifed = true;
+    order.isOtpVerified = true;
     order.deliveredAt = Date.now();
     order.OTP = null;
     order.status = "delivered";
