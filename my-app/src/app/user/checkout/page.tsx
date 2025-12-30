@@ -21,19 +21,12 @@ import {
 import { motion } from "motion/react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import "leaflet/dist/leaflet.css"
-import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
-import L, { LatLngExpression } from "leaflet";
 import axios from "axios";
-import { OpenStreetMapProvider } from "leaflet-geosearch";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 
+const CheckoutMap = dynamic(() => import('@/components/CheckoutMap'), { ssr: false });
 
-const markerIcon = new L.Icon({
-    iconUrl: "https://cdn-icons-png.flaticon.com/128/684/684908.png",
-    iconSize: [40, 40],
-    iconAnchor: [20, 40]
-})
 
 export default function CheckoutPage() {
     const router = useRouter()
@@ -105,6 +98,7 @@ export default function CheckoutPage() {
 
     const handleSearchQuery = async () => {
         setSearchLoading(true)
+        const { OpenStreetMapProvider } = await import('leaflet-geosearch')
         const provider = new OpenStreetMapProvider()
         const results = await provider.search({ query: searchQuery })
         if (results && results.length > 0) {
@@ -114,31 +108,7 @@ export default function CheckoutPage() {
         setSearchLoading(false)
     }
 
-    // Component to update Map View when position changes
-    const DraggableMarker: React.FC = () => {
-        const map = useMap();
-
-        useEffect(() => {
-            if (position) {
-                map.flyTo(position as LatLngExpression, 16, { animate: true, duration: 1.5 })
-            }
-        }, [position, map])
-
-        if (!position) return null;
-
-        return <Marker
-            icon={markerIcon}
-            position={position as LatLngExpression}
-            draggable={true}
-            eventHandlers={{
-                dragend: (e: L.LeafletEvent) => {
-                    const marker = e.target as L.Marker
-                    const { lat, lng } = marker.getLatLng()
-                    setPosition([lat, lng])
-                }
-            }}
-        />
-    }
+    
 
     const handleCodOrder = async () => {
         if (!userData || !position) return null
@@ -366,10 +336,7 @@ export default function CheckoutPage() {
                             <div className="mt-6 relative w-full h-52 md:h-84 rounded-2xl overflow-hidden border border-gray-200 group z-0">
                                 {position ? (
                                     <>
-                                        <MapContainer center={position as LatLngExpression} zoom={15} scrollWheelZoom={true} className="w-full h-full z-0">
-                                            <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap<a/> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                                            <DraggableMarker />
-                                        </MapContainer>
+                                        <CheckoutMap position={position} setPosition={setPosition} />
 
                                         {/* --- RECENTER BUTTON --- */}
                                         <button

@@ -4,11 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { orderId: string } }
+  context: { params: Promise<{ orderId: string; }>; }
 ) {
   try {
     await ConnectDB();
-    const { orderId } = await params;
+    const { orderId } = await context.params;
     const order = await OrderModel.findById(orderId).populate("assignedDeliveryBoy")
     if (!order) {
       return NextResponse.json({ message: "Order Not Found" }, { status: 404 });

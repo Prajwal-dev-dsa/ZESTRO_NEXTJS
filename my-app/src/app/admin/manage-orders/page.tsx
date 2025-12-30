@@ -5,7 +5,6 @@ import { ArrowLeft, Search, Loader2, PackageX } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import mongoose from "mongoose";
 import AdminOrderCard from "@/components/AdminOrderCard";
 import { initSocket } from "@/lib/socket.io";
 
@@ -18,11 +17,11 @@ interface IUser {
 }
 
 interface IOrder {
-    _id?: mongoose.Types.ObjectId | string;
-    user: mongoose.Types.ObjectId;
+    _id?: string;
+    user: string;
     items: [
         {
-            grocery: mongoose.Types.ObjectId;
+            grocery: string;
             name: string;
             unit: string;
             image: string;
@@ -44,7 +43,7 @@ interface IOrder {
     };
     status: "pending" | "out of delivery" | "delivered";
     isPaid: boolean;
-    orderAssignment?: mongoose.Types.ObjectId;
+    orderAssignment?: string;
     assignedDeliveryBoy?: IUser;
     createdAt?: Date | string;
     updatedAt?: Date;

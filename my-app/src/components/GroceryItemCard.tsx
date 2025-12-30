@@ -1,7 +1,6 @@
 "use client"
 
 import { Minus, Plus, ShoppingCart, Timer } from "lucide-react";
-import mongoose from "mongoose";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
@@ -10,7 +9,7 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { addToCart, decreaseItemQuantity, increaseItemQuantity } from "@/redux/cartSlice";
 
 export interface IGrocery {
-  _id: mongoose.Types.ObjectId;
+  _id: string;
   name: string;
   category: string;
   unit: string;

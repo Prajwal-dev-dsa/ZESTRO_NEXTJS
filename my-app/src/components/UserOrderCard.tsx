@@ -18,7 +18,6 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { initSocket } from "@/lib/socket.io";
 import Link from "next/link";
-import mongoose from "mongoose";
 
 interface IUser {
     _id: string;
@@ -29,11 +28,11 @@ interface IUser {
 }
 
 interface IOrder {
-    _id?: mongoose.Types.ObjectId | string;
-    user: mongoose.Types.ObjectId;
+    _id?: string;
+    user: string;
     items: [
         {
-            grocery: mongoose.Types.ObjectId;
+            grocery: string;
             name: string;
             unit: string;
             image: string;
@@ -55,7 +54,7 @@ interface IOrder {
     };
     status: "pending" | "out of delivery" | "delivered";
     isPaid: boolean;
-    orderAssignment?: mongoose.Types.ObjectId;
+    orderAssignment?: string;
     assignedDeliveryBoy?: IUser;
     createdAt?: Date | string;
     updatedAt?: Date;
