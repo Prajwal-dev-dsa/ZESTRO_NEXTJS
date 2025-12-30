@@ -1,22 +1,15 @@
 import ConnectDB from "@/lib/db"
 import CategorySlider from "./CategorySlider"
 import HeroSection from "./HeroSection"
-import groceryModel from "@/models/grocery.model"
 import GroceryItemCard, { IGrocery } from "./GroceryItemCard"
 import { Flame } from "lucide-react"
 
-async function UserDashboard() {
+async function UserDashboard({ groceryList }: { groceryList: IGrocery[] }) {
     await ConnectDB()
-    const grocery = await groceryModel.find({}).sort({ createdAt: -1 }).lean();
-    const plainGrocery: IGrocery[] = grocery.map((doc: any) => ({
-        ...doc,
-        _id: doc._id.toString(),
-        createdAt: doc.createdAt?.toISOString(),
-        updatedAt: doc.updatedAt?.toISOString(),
-    }));
-
+    // Use the passed groceryList instead of querying again
+    const plainGrocery = JSON.parse(JSON.stringify(groceryList))
     return (
-        <div className="bg-slate-50 min-h-screen pb-20">
+        <div className="bg-slate-50 min-h-screen">
             <HeroSection />
             <CategorySlider />
 
@@ -27,7 +20,7 @@ async function UserDashboard() {
                     <div className="bg-blue-100 p-2 md:p-3 rounded-full shadow-sm animate-pulse">
                         <Flame className="text-blue-600 w-5 h-5 md:w-6 md:h-6 fill-blue-600" />
                     </div>
-                    <div>
+                    <div className="mb-8">
                         <h2 className="text-xl md:text-3xl font-extrabold text-slate-800 tracking-tight">
                             Recommended for you
                         </h2>
@@ -40,7 +33,7 @@ async function UserDashboard() {
                 {/* --- Grid Layout Adjusted for Mobile --- */}
                 {plainGrocery.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
-                        {plainGrocery.map((item, idx) => (
+                        {plainGrocery.map((item: IGrocery, idx: number) => (
                             <GroceryItemCard key={idx} item={item} />
                         ))}
                     </div>

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { signOut } from "next-auth/react";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 
@@ -23,8 +23,10 @@ interface IUser {
 }
 
 function Navbar({ user }: { user: IUser }) {
+    const router = useRouter()
     const { cartData } = useSelector((state: RootState) => state.cart)
     const [open, setOpen] = useState(false);
+    const [search, setSearch] = useState("");
     const [searchBarOpen, setSearchBarOpen] = useState(false)
     const profileDropDownRef = useRef<HTMLDivElement>(null)
     useEffect(() => {
@@ -43,15 +45,24 @@ function Navbar({ user }: { user: IUser }) {
         await signOut()
         redirect("/login")
     }
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        const query = search.trim();
+        setSearch("")
+        setSearchBarOpen(false)
+        if (!query) return router.push("/")
+        router.push(`/?q=${encodeURIComponent(query)}`)
+    }
     return (
         <div className="w-[95%] fixed top-4 left-1/2 -translate-x-1/2 bg-linear-to-r from-blue-500 to-blue-700 rounded-2xl shadow-lg shadow-black/30 flex justify-between items-center h-20 px-4 md:px-8 z-50">
             <Link href={"/"} className="text-white font-extrabold text-2xl sm:text-3xl tracking-wide hover:scale-105 transition-transform">
                 Zestro
             </Link>
             {
-                user?.role == "user" && <form className="hidden md:flex items-center bg-white rounded-full px-4 py-2 w-1/2 max-w-lg shadow-md">
+                user?.role == "user" && <form onSubmit={(e) => handleSearch(e)} className="hidden md:flex items-center bg-white rounded-full px-4 py-2 w-1/2 max-w-lg shadow-md">
                     <Search className="w-5 h-5 text-gray-500 mr-2" />
-                    <input type="text" placeholder="Search Groceries..." className="w-full text-gray-700 placeholder-gray-400 bg-transparent outline-none" />
+                    <input type="text" onChange={(e) => setSearch(e.target.value)} value={search} placeholder="Search Groceries..." className="w-full text-gray-700 placeholder-gray-400 bg-transparent outline-none" />
                 </form>
             }
             <div className="flex items-center gap-4 md:gap-6 relative">
@@ -130,8 +141,8 @@ function Navbar({ user }: { user: IUser }) {
                         {
                             searchBarOpen && <motion.div initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.4 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} className="fixed top-24 left-1/2 -translate-x-1/2 w-[90%] bg-white rounded-full shadow-lg z-40p-3 flex items-center px-4 py-2">
                                 <Search className="text-gray-500 mr-2 size-6" />
-                                <form className="grow">
-                                    <input type="text" placeholder="Search Groceries..." className="w-full text-gray-700 placeholder-gray-500 bg-transparent outline-none" />
+                                <form onSubmit={(e) => handleSearch(e)} className="grow">
+                                    <input type="text" onChange={(e) => setSearch(e.target.value)} value={search} placeholder="Search Groceries..." className="w-full text-gray-700 placeholder-gray-500 bg-transparent outline-none" />
                                 </form>
                                 <button onClick={() => setSearchBarOpen(false)}>
                                     <X className="text-gray-500 size-6" />

@@ -111,7 +111,7 @@ function CategorySlider() {
 
     return (
         <section
-            className="w-full py-12 px-4 md:px-8 bg-white"
+            className="w-full pt-12 px-4 md:px-8 bg-white"
         >
 
             {/* Header Section */}
