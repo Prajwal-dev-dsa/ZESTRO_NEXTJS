@@ -9,17 +9,17 @@ export async function POST(req: NextRequest) {
     await ConnectDB();
     const { orderId, otp } = await req.json();
     if (!orderId || !otp) {
-      NextResponse.json(
+      return NextResponse.json(
         { message: "Order ID and OTP are Required" },
         { status: 400 }
       );
     }
     const order = await OrderModel.findById(orderId).populate("user");
     if (!order) {
-      NextResponse.json({ message: "Order Not Found" }, { status: 404 });
+      return NextResponse.json({ message: "Order Not Found" }, { status: 404 });
     }
     if (Number(order.OTP) !== Number(otp)) {
-      NextResponse.json({ message: "Invalid OTP" }, { status: 400 });
+      return NextResponse.json({ message: "Invalid OTP" }, { status: 400 });
     }
     order.isOtpVerified = true;
     order.deliveredAt = Date.now();

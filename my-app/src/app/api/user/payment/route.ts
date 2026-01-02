@@ -1,4 +1,5 @@
 import ConnectDB from "@/lib/db";
+import socketEmitEventHandler from "@/lib/socketEmitEventHandler";
 import OrderModel from "@/models/order.model";
 import UserModel from "@/models/user.model";
 import { NextRequest, NextResponse } from "next/server";
@@ -27,6 +28,7 @@ export async function POST(request: NextRequest) {
       address,
       paymentMethod: "online",
     });
+    await socketEmitEventHandler("new-order", newOrder);
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
