@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useRef, useEffect, useState } from 'react';
 import { motion } from 'motion/react';
+import { useRouter } from 'next/navigation';
 
 interface Category {
     id: number;
@@ -37,6 +38,7 @@ interface Category {
 }
 
 function CategorySlider() {
+    const router = useRouter();
     const scrollRef = useRef<HTMLDivElement>(null);
     const [isPaused, setIsPaused] = useState<boolean>(false);
     const [showLeftIcon, setShowLeftIcon] = useState<boolean>(false);
@@ -144,6 +146,7 @@ function CategorySlider() {
                 >
                     {categories.map((category, index) => (
                         <motion.div
+                            onClick={() => router.push(`/user/shop-by-category/${category.name}`)}
                             key={category.id}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}

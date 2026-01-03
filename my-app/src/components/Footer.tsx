@@ -171,7 +171,7 @@ export default function Footer() {
         {/* --- Bottom Bar --- */}
         <div className="border-t border-blue-500/30 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-blue-200 font-medium flex items-center gap-1">
-            © {currentYear} <span className="text-white font-bold">Zestro</span>. Made with <Heart className="w-3.5 h-3.5 text-red-400 fill-red-400 animate-pulse" /> in India.
+            © {currentYear} <span className="text-white font-bold">Zestro.</span> Made with <Heart className="w-3.5 h-3.5 text-red-400 fill-red-400 animate-pulse" /> in India.
           </p>
 
           <div className="flex items-center gap-6">
@@ -187,7 +187,6 @@ export default function Footer() {
             <div className="h-8 px-3 bg-white/10 rounded border border-white/20 flex items-center justify-center text-white text-[10px] font-bold tracking-wider backdrop-blur-sm">UPI</div>
           </div>
         </div>
-
       </div>
     </footer>
   );

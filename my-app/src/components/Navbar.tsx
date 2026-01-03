@@ -55,7 +55,7 @@ function Navbar({ user }: { user: IUser }) {
         router.push(`/?q=${encodeURIComponent(query)}`)
     }
     return (
-        <div className="w-[95%] fixed top-4 left-1/2 -translate-x-1/2 bg-linear-to-r from-blue-500 to-blue-700 rounded-2xl shadow-lg shadow-black/30 flex justify-between items-center h-20 px-4 md:px-8 z-50">
+        <div className="w-[95%] fixed top-4 left-1/2 -translate-x-1/2 bg-linear-to-r from-blue-500 to-blue-700 rounded-2xl shadow-lg shadow-black/30 flex justify-between items-center h-20 px-4 md:px-8 z-999">
             <Link href={"/"} className="text-white font-extrabold text-2xl sm:text-3xl tracking-wide hover:scale-105 transition-transform">
                 Zestro
             </Link>

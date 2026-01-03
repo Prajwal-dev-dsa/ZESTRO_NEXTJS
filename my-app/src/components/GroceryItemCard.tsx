@@ -82,7 +82,7 @@ function GroceryItemCard({ item }: { item: IGrocery }) {
       </div>
 
       {/* --- Content Section --- */}
-      <div className="flex flex-col grow p-3 md:p-4 pt-0">
+      <div className="flex flex-col grow p-3 md:p-4">
 
         {/* Category */}
         <span className="text-[10px] md:text-xs text-gray-400 font-medium mb-1 block">
@@ -90,7 +90,7 @@ function GroceryItemCard({ item }: { item: IGrocery }) {
         </span>
 
         {/* Title */}
-        <h3 className="font-bold text-gray-800 text-sm md:text-lg leading-tight mb-2 md:mb-3 line-clamp-2 min-h-10 md:min-h-14">
+        <h3 className="font-bold text-gray-800 text-sm md:text-lg leading-tight line-clamp-2 min-h-8">
           {item.name}
         </h3>
 

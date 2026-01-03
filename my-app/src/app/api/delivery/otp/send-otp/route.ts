@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
           </p>
           
           <div style="border-top: 1px solid #e2e8f0; margin-top: 30px; padding-top: 20px; text-align: center;">
-            <p style="font-size: 12px; color: #cbd5e1;">© ${new Date().getFullYear()} Your App Name. All rights reserved.</p>
+            <p style="font-size: 12px; color: #cbd5e1;">© ${new Date().getFullYear()} Zestro. All rights reserved.</p>
           </div>
         </div>
       </div>

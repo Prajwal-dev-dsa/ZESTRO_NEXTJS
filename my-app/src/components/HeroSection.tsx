@@ -17,8 +17,10 @@ import { AnimatePresence } from 'motion/react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
+import { useRouter } from 'next/navigation';
 
 function HeroSection() {
+    const router = useRouter();
     const slides = [
         {
             id: 1,
@@ -26,6 +28,7 @@ function HeroSection() {
             title: "Farm Fresh",
             subTitle: "Vegetables & fruits harvested daily.",
             btnText: "Shop Greens",
+            category: "Vegetables & Fruits",
             bgImg: "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1920&auto=format&fit=crop&q=80"
         },
         {
@@ -34,6 +37,7 @@ function HeroSection() {
             title: "Pharmacy",
             subTitle: "Essential medicines & first-aid delivered.",
             btnText: "Order Meds",
+            category: "Pharma & Wellness",
             bgImg: "https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=1920&auto=format&fit=crop&q=80"
         },
         {
@@ -42,6 +46,7 @@ function HeroSection() {
             title: "Pet Care",
             subTitle: "Premium food & treats for your furry friends.",
             btnText: "Pamper Pets",
+            category: "Pet Care",
             bgImg: "https://plus.unsplash.com/premium_photo-1661962620229-614e281fe009?w=1920&auto=format&fit=crop&q=80"
         },
         {
@@ -50,6 +55,7 @@ function HeroSection() {
             title: "Electronics",
             subTitle: "Chargers, cables & earphones in minutes.",
             btnText: "Get Gadgets",
+            category: "Electronics & Accessories",
             bgImg: "https://plus.unsplash.com/premium_photo-1661304671477-37c77d0c6930?w=1920&auto=format&fit=crop&q=80"
         },
         {
@@ -58,6 +64,7 @@ function HeroSection() {
             title: "Cleaning Essentials",
             subTitle: "Detergents, sprays & supplies for a tidy home.",
             btnText: "Clean Up",
+            category: "Cleaning & Household",
             bgImg: "https://plus.unsplash.com/premium_photo-1663047022624-2e573ccd0682?w=1920&auto=format&fit=crop&q=80"
         },
         {
@@ -66,6 +73,7 @@ function HeroSection() {
             title: "Baby Care",
             subTitle: "Diapers, wipes & baby food for emergencies.",
             btnText: "Baby Needs",
+            category: "Baby Care",
             bgImg: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=1920&auto=format&fit=crop&q=80"
         },
         {
@@ -74,6 +82,7 @@ function HeroSection() {
             title: "Stationery",
             subTitle: "Notebooks, pens & craft supplies for school.",
             btnText: "Restock Desk",
+            category: "Stationery & Office",
             bgImg: "https://images.unsplash.com/photo-1654931800100-2ecf6eee7c64?w=1920&auto=format&fit=crop&q=80"
         },
         {
@@ -82,6 +91,7 @@ function HeroSection() {
             title: "Gifting & Flowers",
             subTitle: "Last-minute gifts, wrappers & fresh bouquets.",
             btnText: "Send Love",
+            category: "Gifting & Flowers",
             bgImg: "https://images.unsplash.com/photo-1668127494508-72d882001969?w=1920&auto=format&fit=crop&q=80"
         },
         {
@@ -90,6 +100,7 @@ function HeroSection() {
             title: "Meats & Seafood",
             subTitle: "Fresh cuts, chemical-free & cold stored.",
             btnText: "Cook Fresh",
+            category: "Meats, Fish & Eggs",
             bgImg: "https://images.unsplash.com/photo-1556906851-99df9cb88ad2?w=1920&auto=format&fit=crop&q=80"
         },
         {
@@ -98,6 +109,7 @@ function HeroSection() {
             title: "Cool Cravings",
             subTitle: "Ice creams, sodas & desserts frozen delivered.",
             btnText: "Treat Yourself",
+            category: "Ice Creams & Frozen Desserts",
             bgImg: "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=1920&auto=format&fit=crop&q=80"
         }
     ];
@@ -116,6 +128,7 @@ function HeroSection() {
             <div className="relative w-full h-[65vh] md:h-[75vh] rounded-3xl overflow-hidden shadow-2xl bg-gray-900 group ring-1 ring-gray-200">
                 <AnimatePresence mode='wait'>
                     <motion.div
+                        onClick={() => router.push(`/user/shop-by-category/${slides[currentSlide]?.category}`)}
                         key={currentSlide}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
