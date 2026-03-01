@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     if (!orderId) {
       return NextResponse.json(
         { message: "Order ID is Required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -63,17 +63,17 @@ export async function POST(req: NextRequest) {
     await sendMail(
       order.user.email,
       `Delivery OTP: ${otp}`, // Subject line updated to be more useful
-      emailHtml
+      emailHtml,
     );
 
     return NextResponse.json(
       { message: "OTP Sent Successfully" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     return NextResponse.json(
       { message: `Error in SendMail route ${error}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

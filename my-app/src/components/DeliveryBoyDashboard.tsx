@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "motion/react"
 import {
     MapPin,
     CreditCard,
-    Clock,
     CheckCircle,
     XCircle,
     DollarSign,
@@ -516,7 +515,7 @@ function ActiveOrderCard({ order, userLocation, deliveryBoyLocation, onDeliveryS
             <div className="p-6 pt-4">
                 <div className="space-y-4 mb-6">
                     <div className="flex items-start gap-3">
-                        <div className="min-w-[24px] mt-0.5">
+                        <div className="min-w-24px mt-0.5">
                             <MapPin className="w-5 h-5 text-blue-600" />
                         </div>
                         <div>
@@ -525,7 +524,7 @@ function ActiveOrderCard({ order, userLocation, deliveryBoyLocation, onDeliveryS
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="min-w-[24px]">
+                        <div className="min-w-24px">
                             <CreditCard className="w-5 h-5 text-blue-600" />
                         </div>
                         <div>
@@ -707,7 +706,7 @@ function AssignmentCard({ data, onAccept, onReject }: AssignmentCardProps) {
             </div>
             <div className="p-5">
                 <div className="flex gap-3 mb-5">
-                    <div className="mt-1 min-w-[32px] h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                    <div className="mt-1 min-w-32px h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
                         <MapPin size={18} />
                     </div>
                     <div>

@@ -59,13 +59,13 @@ export async function GET() {
         todaysEarning,
         chartData,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Stats API Error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -57,7 +57,7 @@ const grocerySchema = new mongoose.Schema<IGrocery>(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const groceryModel =

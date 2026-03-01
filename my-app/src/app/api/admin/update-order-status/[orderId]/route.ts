@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(
   req: NextRequest,
-  context: { params: Promise<{ orderId: string; }>; }
+  context: { params: Promise<{ orderId: string }> },
 ) {
   try {
     await ConnectDB();
@@ -34,7 +34,7 @@ export async function PUT(
         },
       });
       const nearestDeliveryBoysIds = nearestDeliveryBoys.map(
-        (deliveryBoy) => deliveryBoy._id
+        (deliveryBoy) => deliveryBoy._id,
       );
       const busyDeliveryBoysIds = await deliveryModel
         .find({
@@ -43,10 +43,10 @@ export async function PUT(
         })
         .distinct("assignedDeliveryBoy");
       const availableDeliveryBoys = nearestDeliveryBoys.filter(
-        (deliveryBoy) => !busyDeliveryBoysIds.includes(deliveryBoy._id)
+        (deliveryBoy) => !busyDeliveryBoysIds.includes(deliveryBoy._id),
       );
       const availableDeliveryBoysIds = availableDeliveryBoys.map(
-        (deliveryBoy) => deliveryBoy._id
+        (deliveryBoy) => deliveryBoy._id,
       );
       if (availableDeliveryBoys.length == 0) {
         order.save();
@@ -57,7 +57,7 @@ export async function PUT(
         });
         return NextResponse.json(
           { message: "No Delivery Boy Found, Try Again Later" },
-          { status: 200 }
+          { status: 200 },
         );
       }
       const deliveryAssignment = await deliveryModel.create({
@@ -79,7 +79,7 @@ export async function PUT(
           await socketEmitEventHandler(
             "new-order-assignment",
             deliveryAssignment,
-            deliveryBoy.socketId
+            deliveryBoy.socketId,
           );
         }
       }
@@ -95,12 +95,12 @@ export async function PUT(
         assignment: order.orderAssignment?._id,
         availableDeliveryBoys: deliveryBoysPayload,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     return NextResponse.json(
       { message: "Error in updating order status" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

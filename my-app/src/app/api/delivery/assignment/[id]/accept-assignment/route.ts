@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  context: { params: Promise<{ id: string; }>; }
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     await ConnectDB();
@@ -21,13 +21,13 @@ export async function GET(
     if (!assignment) {
       return NextResponse.json(
         { message: "Assignment not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
     if (assignment.status != "broadcasted") {
       return NextResponse.json(
         { message: "Assignment already accepted" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const alreadyAssigned = await deliveryModel.findOne({
@@ -37,7 +37,7 @@ export async function GET(
     if (alreadyAssigned) {
       return NextResponse.json(
         { message: "You are already assigned to this assignment" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     assignment.assignedDeliveryBoy = deliveryBoyId;
@@ -61,17 +61,17 @@ export async function GET(
         totalDeliveryBoys: { $in: deliveryBoyId },
         status: "broadcasted",
       },
-      { $pull: { totalDeliveryBoys: deliveryBoyId } }
+      { $pull: { totalDeliveryBoys: deliveryBoyId } },
     );
     return NextResponse.json(
       { message: "Assignment accepted successfully" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.log(`Failed to accept assignment: ${error}`);
     return NextResponse.json(
       { message: "Failed to accept assignment" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

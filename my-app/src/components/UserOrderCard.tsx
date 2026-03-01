@@ -10,9 +10,6 @@ import {
     CreditCard,
     Calendar,
     HandCoins,
-    User,
-    Phone,
-    Truck,
     Navigation
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";

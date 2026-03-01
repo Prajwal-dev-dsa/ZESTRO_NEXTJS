@@ -11,9 +11,9 @@ const markerIcon = new L.Icon({
   iconAnchor: [20, 40],
 });
 
-type props={
-    position:[number,number],
-    setPosition:(pos:[number,number])=>void
+type props = {
+  position: [number, number],
+  setPosition: (pos: [number, number]) => void
 }
 
 function CheckoutMap({ position, setPosition }: props) {

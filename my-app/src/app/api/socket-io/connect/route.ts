@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { message: "Socket.io connect Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

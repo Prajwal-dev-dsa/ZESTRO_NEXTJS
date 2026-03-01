@@ -50,7 +50,7 @@ export default function AddGrocery() {
         "Paan Corner"
     ];
 
-    const units = ["kg", "g", "l", "ml", "pcs", "pack", "dozen"];
+    const units = ["kg", "g", "l", "ml", "piece", "pack", "dozen"];
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

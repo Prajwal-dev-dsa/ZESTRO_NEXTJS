@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     if (!roomId || !text || !senderId || !time) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     if (!room) {
       return NextResponse.json(
         { error: "Room (Order) not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     return NextResponse.json(
       { error: `Server Error: ${error.message}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

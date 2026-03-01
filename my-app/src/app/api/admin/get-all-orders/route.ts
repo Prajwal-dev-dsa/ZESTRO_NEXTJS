@@ -9,14 +9,14 @@ export async function GET() {
     if (!orders) {
       return NextResponse.json(
         { message: "Orders not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
     return NextResponse.json(orders, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

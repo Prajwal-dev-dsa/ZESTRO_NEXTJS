@@ -36,7 +36,7 @@ const deliverySchema = new mongoose.Schema<IDelivery>(
       type: Date,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const deliveryModel =

@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     if (!groceryId) {
       return NextResponse.json(
         { error: "Grocery ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     if (!grocery) {
       return NextResponse.json(
         { message: "Grocery Not Found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { error: `Failed to delete grocery ${error}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

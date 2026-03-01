@@ -238,8 +238,8 @@ export default function DeliveryChat({ orderId, currentUserId, otherPartyName, r
                                     >
                                         <div
                                             className={`px-4 py-2.5 rounded-2xl text-sm shadow-sm relative ${isMe
-                                                    ? "bg-blue-600 text-white rounded-tr-none"
-                                                    : "bg-white text-slate-700 border border-gray-100 rounded-tl-none"
+                                                ? "bg-blue-600 text-white rounded-tr-none"
+                                                : "bg-white text-slate-700 border border-gray-100 rounded-tl-none"
                                                 }`}
                                         >
                                             {msg.text}
@@ -293,8 +293,8 @@ export default function DeliveryChat({ orderId, currentUserId, otherPartyName, r
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => handleSend()}
                                 className={`p-3 rounded-xl flex items-center justify-center transition-all ${inputText.trim()
-                                        ? "bg-blue-600 text-white shadow-md cursor-pointer shadow-blue-200"
-                                        : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                                    ? "bg-blue-600 text-white shadow-md cursor-pointer shadow-blue-200"
+                                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
                                     }`}
                                 disabled={!inputText.trim()}
                             >

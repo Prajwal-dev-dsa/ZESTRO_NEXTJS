@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     if (!roomId) {
       return NextResponse.json(
         { error: "Room ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const room = await OrderModel.findById(roomId);
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { error: "Error in Get Room Messages Route" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

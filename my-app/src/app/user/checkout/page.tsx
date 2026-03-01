@@ -108,7 +108,7 @@ export default function CheckoutPage() {
         setSearchLoading(false)
     }
 
-    
+
 
     const handleCodOrder = async () => {
         if (!userData || !position) return null

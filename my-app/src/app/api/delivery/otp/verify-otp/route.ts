@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     if (!orderId || !otp) {
       return NextResponse.json(
         { message: "Order ID and OTP are Required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const order = await OrderModel.findById(orderId).populate("user");
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
           assignedDeliveryBoy: null,
           status: "completed",
         },
-      }
+      },
     );
 
     await socketEmitEventHandler("update-order-status", {
@@ -46,12 +46,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       { message: "OTP Verified Successfully" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     return NextResponse.json(
       { message: `Error in VerifyMail route ${error}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

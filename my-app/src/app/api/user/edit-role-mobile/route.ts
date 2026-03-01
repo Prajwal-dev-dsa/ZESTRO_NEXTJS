@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     const user = await UserModel.findByIdAndUpdate(
       session?.user?.id,
       { role, mobile },
-      { new: true }
+      { new: true },
     );
     if (!user)
       return NextResponse.json({ message: "User not found" }, { status: 404 });
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { message: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

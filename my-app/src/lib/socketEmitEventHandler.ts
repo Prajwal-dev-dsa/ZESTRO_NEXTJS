@@ -3,7 +3,7 @@ import axios from "axios";
 async function socketEmitEventHandler(
   event: string,
   data: any,
-  socketId?: string
+  socketId?: string,
 ) {
   try {
     const res = await axios.post(
@@ -12,7 +12,7 @@ async function socketEmitEventHandler(
         event,
         data,
         socketId,
-      }
+      },
     );
     console.log(res.data);
   } catch (error) {

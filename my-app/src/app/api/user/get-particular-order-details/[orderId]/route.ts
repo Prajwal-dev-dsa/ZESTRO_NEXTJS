@@ -4,12 +4,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  context: { params: Promise<{ orderId: string; }>; }
+  context: { params: Promise<{ orderId: string }> },
 ) {
   try {
     await ConnectDB();
     const { orderId } = await context.params;
-    const order = await OrderModel.findById(orderId).populate("assignedDeliveryBoy")
+    const order = await OrderModel.findById(orderId).populate(
+      "assignedDeliveryBoy",
+    );
     if (!order) {
       return NextResponse.json({ message: "Order Not Found" }, { status: 404 });
     }
@@ -18,7 +20,7 @@ export async function GET(
     console.log(`Error in get-particular-order-details ${error}`);
     return NextResponse.json(
       { message: "Error in get-particular-order-details" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

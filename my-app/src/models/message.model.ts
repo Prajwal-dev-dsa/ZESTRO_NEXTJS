@@ -31,7 +31,7 @@ const messageSchema = new mongoose.Schema<IMessage>(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const MessageModel =

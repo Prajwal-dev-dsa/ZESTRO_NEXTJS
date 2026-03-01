@@ -17,7 +17,7 @@ export async function GET() {
   } catch (error) {
     return NextResponse.json(
       { message: `Error in get-all-order-assignments route ${error}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

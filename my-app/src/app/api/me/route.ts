@@ -10,7 +10,7 @@ export async function GET() {
     if (!session || !session.user) {
       return NextResponse.json(
         { message: "Unauthorized User" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const user = await UserModel.findOne({

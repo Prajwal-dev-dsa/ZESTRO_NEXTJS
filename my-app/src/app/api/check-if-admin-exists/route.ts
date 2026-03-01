@@ -10,7 +10,7 @@ export async function GET() {
   } catch (error) {
     return NextResponse.json(
       { message: `Error in Check if admin exists route` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

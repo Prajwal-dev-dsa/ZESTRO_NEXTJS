@@ -11,7 +11,7 @@ export interface IOrder {
       image: string;
       quantity: number;
       price: string;
-    }
+    },
   ];
   totalAmount: number;
   paymentMethod: "cod" | "online";
@@ -107,7 +107,7 @@ const OrderSchema = new mongoose.Schema<IOrder>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const OrderModel =

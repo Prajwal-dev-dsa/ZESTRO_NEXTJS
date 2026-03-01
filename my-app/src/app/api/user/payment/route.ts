@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     if (!userId || !items || !totalAmount || !address) {
       return NextResponse.json(
         { message: `All fields are required` },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const user = await UserModel.findById(userId);

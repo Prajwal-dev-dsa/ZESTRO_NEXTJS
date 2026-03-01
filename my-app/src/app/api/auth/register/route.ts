@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     if (!name || !email || !password) {
       return NextResponse.json(
         { error: "All fields are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const isEmailValid = validator.isEmail(email);
@@ -21,14 +21,14 @@ export async function POST(req: NextRequest) {
     if (password.length < 6) {
       return NextResponse.json(
         { error: "Password must be at least 6 characters long" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const ifUserExists = await UserModel.findOne({ email });
     if (ifUserExists) {
       return NextResponse.json(
         { error: "User already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const genSalt = await bcrypt.genSalt(10);
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { error: "Error in Register Route" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

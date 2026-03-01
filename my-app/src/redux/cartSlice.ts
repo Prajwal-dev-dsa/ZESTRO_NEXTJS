@@ -27,19 +27,13 @@ const cartSlice = createSlice({
     addToCart: (state, action: PayloadAction<IGrocery>) => {
       state.cartData.push(action.payload);
     },
-    increaseItemQuantity: (
-      state,
-      action: PayloadAction<string>
-    ) => {
+    increaseItemQuantity: (state, action: PayloadAction<string>) => {
       const item = state.cartData.find((i) => i._id == action.payload);
       if (item) {
         item.quantity += 1;
       }
     },
-    decreaseItemQuantity: (
-      state,
-      action: PayloadAction<string>
-    ) => {
+    decreaseItemQuantity: (state, action: PayloadAction<string>) => {
       const item = state.cartData.find((i) => i._id == action.payload);
       if (item?.quantity && item?.quantity > 1) {
         item.quantity -= 1;

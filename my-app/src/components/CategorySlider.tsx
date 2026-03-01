@@ -152,7 +152,7 @@ function CategorySlider() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05, duration: 0.3 }}
                             whileHover={{ y: -5, scale: 1.02 }}
-                            className={`min-w-[140px] md:min-w-[160px] h-[160px] md:h-[180px] flex flex-col items-center justify-center p-4 rounded-2xl cursor-pointer shadow-sm hover:shadow-md transition-all ${category.color}`}
+                            className={`min-w-[140px] md:min-w-160px h-160px md:h-[180px] flex flex-col items-center justify-center p-4 rounded-2xl cursor-pointer shadow-sm hover:shadow-md transition-all ${category.color}`}
                         >
                             <div className="bg-white/40 p-3 rounded-full mb-3 backdrop-blur-sm">
                                 {/* Dynamically render the icon component */}

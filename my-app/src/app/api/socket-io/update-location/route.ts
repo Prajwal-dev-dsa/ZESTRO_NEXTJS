@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     if (!userId || !location) {
       return NextResponse.json(
         { message: "Fill all the fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       { message: "Update Location Server Error", error: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

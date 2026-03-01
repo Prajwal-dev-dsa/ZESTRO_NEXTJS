@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     if (!groceryId) {
       return NextResponse.json(
         { error: "Grocery ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const updateData: any = {};
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     const grocery = await groceryModel.findByIdAndUpdate(
       groceryId,
       updateData,
-      { new: true }
+      { new: true },
     );
     if (!grocery) {
       return NextResponse.json({ error: "Grocery not found" }, { status: 404 });
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     console.error("Update Grocery Error:", error);
     return NextResponse.json(
       { error: `Failed to update grocery: ${error}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     if (!name || !category || !unit || !price || !image) {
       return NextResponse.json(
         { error: "All fields are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     if (!groceryImage) {
       return NextResponse.json(
         { error: "Image upload failed" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to add grocery" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

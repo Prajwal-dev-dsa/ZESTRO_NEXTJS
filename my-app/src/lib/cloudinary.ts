@@ -7,7 +7,7 @@ cloudinary.config({
 });
 
 export const uploadOnCloudinary = async (
-  file: Blob
+  file: Blob,
 ): Promise<string | null> => {
   if (!file) return null;
   try {
@@ -21,7 +21,7 @@ export const uploadOnCloudinary = async (
         (error, result) => {
           if (error) return reject(error);
           else return resolve(result?.secure_url || null);
-        }
+        },
       );
       uploadStream.end(buffer);
     });

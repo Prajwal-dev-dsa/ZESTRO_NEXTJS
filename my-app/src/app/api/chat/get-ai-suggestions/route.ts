@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
             },
           ],
         }),
-      }
+      },
     );
 
     const data = await response.json();
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     console.error("Error generating AI suggestions:", error);
     return NextResponse.json(
       { error: `Error in Gemini Route` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
