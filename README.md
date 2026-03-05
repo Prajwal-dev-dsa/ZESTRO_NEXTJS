@@ -9,7 +9,7 @@
 Developed exclusively with **Next.js** and **TypeScript**, Zestro delivers a seamless, end-to-end quick-commerce experience across three distinct user roles: Customers, Admins, and Delivery Personnel. It features real-time order tracking with live maps, secure online payments, AI-powered chat assistance, and dynamic analytics.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge&logo=vercel)](https://zestro-zeta.vercel.app/)
-[![Video Demo](https://img.shields.io/badge/Video-Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](#)
+[![Video Demo](https://img.shields.io/badge/Video-Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.linkedin.com/posts/prajwaldwivedi_nextjs-typescript-fullstackdevelopment-activity-7435200595399024640-uXpG?utm_source=share&utm_medium=member_desktop&rcm=ACoAAFv1zWUBwM9Ou3Y4ZEQhld5Pc1LEpouM6jk)
 
 ## 🌟 Key Features
 
